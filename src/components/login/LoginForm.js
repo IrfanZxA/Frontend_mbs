@@ -7,31 +7,50 @@ const LoginForm = () => {
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!role) {
       alert('Pilih peran terlebih dahulu');
       return;
     }
 
-    // Simpan role ke localStorage
-    localStorage.setItem('role', role);
+    try {
+      const response = await fetch(`http://192.168.111.88:5000/${role}/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
 
-    // Redirect berdasarkan role
-    switch (role) {
-      case 'admin':
-        navigate('/admin');
-        break;
-      case 'siswa':
-        navigate('/siswa');
-        break;
-      case 'guru':
-        navigate('/guru'); // pastikan route /guru sudah dibuat
-        break;
-      case 'orangtua':
-        navigate('/orangtua'); // pastikan route /orangtua sudah dibuat
-        break;
-      default:
-        navigate('/');
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.error || 'Login gagal');
+        return;
+      }
+
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('role', role);
+
+      switch (role) {
+        case 'admin':
+          navigate('/admin');
+          break;
+        case 'siswa':
+          navigate('/siswa');
+          break;
+        case 'guru':
+          navigate('/guru/akademik');
+          break;
+        case 'orangtua':
+          navigate('/orangtua');
+          break;
+        default:
+          navigate('/');
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      alert('Terjadi kesalahan saat login');
     }
   };
 

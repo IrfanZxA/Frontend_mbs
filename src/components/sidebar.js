@@ -4,36 +4,40 @@ import { useNavigate } from 'react-router-dom';
 
 const Sidebar = ({ isOpen }) => {
   const navigate = useNavigate();
+  const role = localStorage.getItem('role'); // 'admin', 'siswa', 'guru'
+
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isSiswaDropdownOpen, setIsSiswaDropdownOpen] = useState(false);
-
-  const role = localStorage.getItem('role'); // ✅ gunakan 'role' agar konsisten
+  const [isMateriDropdownOpen, setIsMateriDropdownOpen] = useState(false);
 
   const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);
   const toggleSiswaDropdown = (e) => {
     e.stopPropagation();
     setIsSiswaDropdownOpen(!isSiswaDropdownOpen);
   };
+  const toggleMateriDropdown = (e) => {
+    e.stopPropagation();
+    setIsMateriDropdownOpen(!isMateriDropdownOpen);
+  };
 
- const sidebarStyle = {
-  width: '250px',
-  height: '100vh',
-  backgroundColor: '#ffffff', // sudah putih untuk semua role
-  transition: 'margin-left 0.3s ease',
-  marginLeft: isOpen ? '0' : '-250px',
-  padding: '1rem',
-  flexShrink: 0,
-  borderRight: '1px solid #ddd',
-  color: '#000', // teks hitam untuk semua role
-  position: 'fixed',
-  top: 0,
-  left: 0,
-  zIndex: 1000,
-  paddingTop: '60px',
-};
+  const sidebarStyle = {
+    width: '250px',
+    height: '100vh',
+    backgroundColor: '#ffffff',
+    transition: 'margin-left 0.3s ease',
+    marginLeft: isOpen ? '0' : '-250px',
+    padding: '1rem',
+    flexShrink: 0,
+    borderRight: '1px solid #ddd',
+    color: '#000',
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    zIndex: 1000,
+    paddingTop: '60px',
+  };
 
-
-  if (!role) return null; // jika belum login, jangan tampilkan sidebar
+  if (!role) return null;
 
   return (
     <>
@@ -70,7 +74,7 @@ const Sidebar = ({ isOpen }) => {
           {/* === ADMIN SIDEBAR === */}
           {role === 'admin' && (
             <>
-              <li className="sidebar-item" onClick={() => navigate('/dashboard-akademik')}>
+              <li className="sidebar-item" onClick={() => navigate('/admin/dashboard-akademik')}>
                 Akademik
               </li>
               <li className="sidebar-item" onClick={toggleDropdown}>
@@ -78,7 +82,7 @@ const Sidebar = ({ isOpen }) => {
               </li>
               {isDropdownOpen && (
                 <ul style={{ listStyle: 'none', paddingLeft: '20px' }}>
-                  <li className="sidebar-subitem" onClick={() => navigate('/EditorAkademik')}>
+                  <li className="sidebar-subitem" onClick={() => navigate('/admin/ManajemenAkademik/EditorAkademik')}>
                     Editor Akademik
                   </li>
                   <li className="sidebar-subitem" onClick={toggleSiswaDropdown}>
@@ -86,12 +90,18 @@ const Sidebar = ({ isOpen }) => {
                   </li>
                   {isSiswaDropdownOpen && (
                     <ul style={{ listStyle: 'none', paddingLeft: '20px' }}>
-                      <li className="sidebar-subitem" onClick={() => navigate('/TambahSiswaBaru')}>Tambah Siswa</li>
-                      <li className="sidebar-subitem" onClick={() => navigate('/EditBiodataSiswa')}>Edit Biodata</li>
-                      <li className="sidebar-subitem" onClick={() => navigate('/NonaktifkanAkun')}>Nonaktifkan Akun</li>
+                      <li className="sidebar-subitem" onClick={() => navigate('/admin/ManajemenAkademik/ManajemenSiswa/TambahSiswaBaru')}>
+                        Tambah Siswa
+                      </li>
+                      <li className="sidebar-subitem" onClick={() => navigate('/admin/ManajemenAkademik/ManajemenSiswa/EditBiodataSiswa')}>
+                        Edit Biodata
+                      </li>
+                      <li className="sidebar-subitem" onClick={() => navigate('/admin/ManajemenAkademik/ManajemenSiswa/NonaktifkanAkun')}>
+                        Nonaktifkan Akun
+                      </li>
                     </ul>
                   )}
-                  <li className="sidebar-subitem" onClick={() => navigate('/ManajemenGuru')}>
+                  <li className="sidebar-subitem" onClick={() => navigate('/admin/ManajemenAkademik/ManajemenGuru')}>
                     Manajemen Guru
                   </li>
                 </ul>
@@ -117,10 +127,61 @@ const Sidebar = ({ isOpen }) => {
             </>
           )}
 
-          {/* === GLOBAL MENU === */}
-          <li className="sidebar-item">Penilaian</li>
-          <li className="sidebar-item">Presensi</li>
-          <li className="sidebar-item">Pengaturan</li>
+          {/* === GURU SIDEBAR === */}
+          {role === 'guru' && (
+          <>
+            <li className="sidebar-item" onClick={() => navigate('/guru/akademik')}>
+              Akademik
+            </li>
+
+            {/* Manajemen Akademik hanya toggle dropdown, tidak navigasi */}
+            <li className="sidebar-item" onClick={toggleDropdown}>
+              Manajemen Akademik
+            </li>
+
+            {isDropdownOpen && (
+              <ul style={{ listStyle: 'none', paddingLeft: '20px' }}>
+                <li className="sidebar-subitem" onClick={() => navigate('/guru/manajemenakademik/absensi')}>
+                  Absensi
+                </li>
+                <li className="sidebar-subitem" onClick={() => navigate('/guru/manajemenakademik/penilaian')}>
+                  Penilaian
+                </li>
+              </ul>
+            )}
+
+            <li className="sidebar-item" onClick={toggleMateriDropdown}>
+              Materi & Tugas
+            </li>
+            {isMateriDropdownOpen && (
+              <ul style={{ listStyle: 'none', paddingLeft: '20px' }}>
+                <li className="sidebar-subitem" onClick={() => navigate('/guru/materi&tugas/materi')}>
+                  Materi
+                </li>
+                <li className="sidebar-subitem" onClick={() => navigate('/guru/materi&tugas/tugas')}>
+                  Tugas
+                </li>
+              </ul>
+            )}
+
+            <li className="sidebar-item" onClick={() => navigate('/guru/jadwal')}>
+              Jadwal Mengajar
+            </li>
+            <li className="sidebar-item" onClick={() => navigate('/guru/pengaturan')}>
+              Pengaturan
+            </li>
+          </>
+)}
+
+
+         {/* === GLOBAL MENU === */}
+          {(role === 'admin' || role === 'siswa') && (
+            <>
+              <li className="sidebar-item">Penilaian</li>
+              <li className="sidebar-item">Presensi</li>
+              <li className="sidebar-item">Pengaturan</li>
+            </>
+          )}
         </ul>
       </div>
     </>
