@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -22,120 +22,62 @@ import DashboardMateri from './components/siswa/dashboard-materi';
 import BahasaIndonesia from './components/siswa/BahasaIndonesia';
 import DetailMateri from './components/siswa/DetailMateri';
 import DetailTugas from './components/siswa/DetailTugas';
+import DashboardPenilaian from './components/siswa/Penilaian';
+import DashboardPresensi from './components/siswa/presensi';
 
 // Layout admin
-import Sidebar from './components/sidebar';
-import Header from './components/header';
 import DashboardAkademik from './components/admin/dashboard-akademik';
 import EditorAkademik from './components/admin/EditorAkademik';
 import ManajemenSiswa from './components/admin/ManajemenSiswa';
-import ManajemenGuru from './components/admin/ManajemenGuru';
 import TambahSiswaBaru from './components/admin/TambahSiswaBaru';
 import EditBiodataSiswa from './components/admin/EditBiodataSiswa';
 import NonaktifkanAkun from './components/admin/NonaktifkanAkun';
-
-// Layout wrapper untuk admin
-const WithLayout = ({ children, toggleSidebar, isSidebarOpen }) => (
-  <div className="d-flex">
-    <Sidebar isOpen={isSidebarOpen} />
-    <div className="flex-grow-1">
-      <Header toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
-      {children}
-    </div>
-  </div>
-);
-
+import ManajemenGuru from './components/admin/ManajemenGuru';
+import AdminPenilaian from './components/admin/admin-penilaian';
+import AdminPresensi from './components/admin/admin-presensi';
+import AdminPengaturan from './components/admin/admin-pengaturan';
+import TambahDataGuru from './components/admin/tambahdataguru';
+import EditJadwalGuru from './components/admin/editjadwalguru';
+import HapusGuruKeluar from './components/admin/hapusgurukeluar';
 function App() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-
-  const toggleSidebar = () => {
-    setIsSidebarOpen(prev => !prev);
-  };
-
   return (
     <BrowserRouter>
       <Routes>
-        {/* Halaman Login */}
+        {/* Login Page */}
         <Route path="/login" element={<LoginForm />} />
 
-        {/* Admin */}
-        <Route
-          path="/admin"
-          element={
-            <WithLayout toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen}>
-              <DashboardAkademik isSidebarOpen={isSidebarOpen} />
-            </WithLayout>
-          }
-        />
-        <Route
-          path="/admin/dashboard-akademik"
-          element={
-            <WithLayout toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen}>
-              <DashboardAkademik isSidebarOpen={isSidebarOpen} />
-            </WithLayout>
-          }
-        />
-        <Route
-          path="/admin/ManajemenAkademik/EditorAkademik"
-          element={
-            <WithLayout toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen}>
-              <EditorAkademik isSidebarOpen={isSidebarOpen} />
-            </WithLayout>
-          }
-        />
-        <Route
-          path="/admin/ManajemenAkademik/ManajemenSiswa"
-          element={
-            <WithLayout toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen}>
-              <ManajemenSiswa isSidebarOpen={isSidebarOpen} />
-            </WithLayout>
-          }
-        />
-        <Route
-          path="/admin/ManajemenAkademik/ManajemenGuru"
-          element={
-            <WithLayout toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen}>
-              <ManajemenGuru isSidebarOpen={isSidebarOpen} />
-            </WithLayout>
-          }
-        />
-        <Route
-          path="/admin/ManajemenAkademik/ManajemenSiswa/TambahSiswaBaru"
-          element={
-            <WithLayout toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen}>
-              <TambahSiswaBaru isSidebarOpen={isSidebarOpen} />
-            </WithLayout>
-          }
-        />
-        <Route
-          path="/admin/ManajemenAkademik/ManajemenSiswa/EditBiodataSiswa"
-          element={
-            <WithLayout toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen}>
-              <EditBiodataSiswa isSidebarOpen={isSidebarOpen} />
-            </WithLayout>
-          }
-        />
-        <Route
-          path="/admin/ManajemenAkademik/ManajemenSiswa/NonaktifkanAkun"
-          element={
-            <WithLayout toggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen}>
-              <NonaktifkanAkun isSidebarOpen={isSidebarOpen} />
-            </WithLayout>
-          }
-        />
+        {/* === Admin Layout === */}
+        <Route path="/admin" element={<MainLayout />}>
+          <Route path="dashboard-akademik" element={<DashboardAkademik />} />
+          <Route path="ManajemenAkademik/EditorAkademik" element={<EditorAkademik />} />
+          <Route path="ManajemenAkademik/ManajemenSiswa" element={<ManajemenSiswa />} />
+          <Route path="ManajemenAkademik/ManajemenSiswa/TambahSiswaBaru" element={<TambahSiswaBaru />} />
+          <Route path="ManajemenAkademik/ManajemenSiswa/EditBiodataSiswa" element={<EditBiodataSiswa />} />
+          <Route path="ManajemenAkademik/ManajemenSiswa/NonaktifkanAkun" element={<NonaktifkanAkun />} />
+          <Route path="ManajemenAkademik/ManajemenGuru" element={<ManajemenGuru />} />
+          <Route path="ManajemenAkademik/ManajemenGuru/TambahDataGuru" element={<TambahDataGuru/>} />
+          <Route path="ManajemenAkademik/ManajemenGuru/EditJadwalGuru" element={<EditJadwalGuru />} />
+          <Route path="ManajemenAkademik/ManajemenGuru/HapusGuruKeluar" element={<HapusGuruKeluar />} />
+          <Route index element={<Navigate to="dashboard-akademik" />} />
+          <Route path="admin-penilaian" element={<AdminPenilaian />} />
+          <Route path="admin-presensi" element={<AdminPresensi />} />
+          <Route path="admin-pengaturan" element={<AdminPengaturan />} />
+        </Route>
 
-        {/* Siswa */}
+        {/* === Siswa Layout === */}
         <Route path="/siswa" element={<MainLayout />}>
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="kelas" element={<DashboardKelas />} />
           <Route path="materi" element={<DashboardMateri />} />
+          <Route path="penilaian" element={<DashboardPenilaian />} />
+          <Route path="presensi" element={<DashboardPresensi />} />
           <Route path="bahasa-indonesia" element={<BahasaIndonesia />} />
           <Route path="materi/:id" element={<DetailMateri />} />
           <Route path="tugas/:id" element={<DetailTugas />} />
           <Route index element={<Navigate to="dashboard" />} />
         </Route>
 
-        {/* Guru: gunakan MainLayout agar sidebar & konten responsif */}
+        {/* === Guru Layout === */}
         <Route path="/guru" element={<MainLayout />}>
           <Route path="akademik" element={<GuruAkademik />} />
           <Route path="manajemenakademik/absensi" element={<GuruAbsensi />} />
@@ -147,7 +89,7 @@ function App() {
           <Route index element={<Navigate to="akademik" />} />
         </Route>
 
-        {/* Default: redirect semua ke login */}
+        {/* Default redirect to login */}
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
     </BrowserRouter>
