@@ -1,6 +1,6 @@
 import React from 'react';
 
-const Header = ({ toggleSidebar }) => {
+const Header = ({ toggleSidebar, profil }) => {
   return (
     <header
       className="d-flex justify-content-between align-items-center px-4 py-2 shadow-sm"
@@ -50,7 +50,9 @@ const Header = ({ toggleSidebar }) => {
           className="me-2"
           style={{ borderRadius: '50%' }}
         />
-        <span className="fw-semibold">Profil</span>
+        <span className="fw-semibold">
+  {profil?.admin?.nama_lengkap || profil?.guru?.nama_lengkap || profil?.siswa?.nama_lengkap || 'Profil'}
+</span>
       </div>
     </header>
   );

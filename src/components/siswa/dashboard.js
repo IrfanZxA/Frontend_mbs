@@ -1,11 +1,35 @@
 import React, { useState } from 'react';
 import CardBox from './cardbox';
 import Sidebar from '../sidebar';
+import { useEffect } from 'react';
 
 const Dashboard = () => {
   const [showSidebar, setShowSidebar] = useState(false);
   const toggleSidebar = () => setShowSidebar(!showSidebar);
+  const [profil, setProfil] = useState(null);
 
+ useEffect(() => {
+  const fetchProfile = async () => {
+    const token = localStorage.getItem('token');
+    const role = localStorage.getItem('role');
+
+    try {
+      const response = await fetch(`http://localhost:5000/${role}/profile`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+      setProfil(data);
+    } catch (error) {
+      console.error('Gagal mengambil profil:', error);
+    }
+  };
+
+  fetchProfile();
+}, []);
+  
   return (
     <div className="d-flex">
       {/* ========== TOMBOL HAMBURGER DI HEADER SAJA ========== */}
@@ -34,7 +58,9 @@ const Dashboard = () => {
           <div className="col-md-8">
             <div className="bg-white d-flex justify-content-between align-items-center p-4 rounded shadow-sm h-100">
               <div>
-                <h5 className="fw-bold">Hallo Walid.</h5>
+                <h5 className="fw-bold">
+  {profil?.siswa?.nama_lengkap ? `Hallo ${profil.siswa.nama_lengkap}.` : 'Hallo Siswa.'}
+</h5>
                 <p className="text-muted">
                   Kami di sini untuk mendukung Anda dalam perjalanan belajar Anda. Ikuti kelas-kelas Anda dan teruslah maju menuju tujuan Anda.
                 </p>

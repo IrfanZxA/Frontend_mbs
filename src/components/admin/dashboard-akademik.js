@@ -1,6 +1,33 @@
 import React from 'react';
+import { useEffect, useState } from 'react';
 
-const DashboardAkademik = ({ isSidebarOpen }) => {
+
+const DashboardAkademik = ({ isSidebarOpen, setNamaLengkap }) => {
+const [profil, setProfil] = useState(null);
+
+useEffect(() => {
+  const fetchProfile = async () => {
+    const token = localStorage.getItem('token');
+    const role = localStorage.getItem('role');
+
+    try {
+      const response = await fetch(`http://localhost:5000/${role}/profile`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+      setProfil(data);
+      setNamaLengkap(data?.admin?.nama_lengkap); // kirim ke luar
+    } catch (error) {
+      console.error('Gagal mengambil profil admin:', error);
+    }
+  };
+
+  fetchProfile();
+}, [setNamaLengkap]);
+
   return (
     <div
       style={{
@@ -9,6 +36,7 @@ const DashboardAkademik = ({ isSidebarOpen }) => {
         transition: 'margin-left 0.3s ease',
       }}
     >
+      
       <h2 style={styles.header}>Dashboard Akademik</h2>
 
       <div style={styles.boxContainer}>
