@@ -24,6 +24,7 @@ import DetailMateri from './components/siswa/DetailMateri';
 import DetailTugas from './components/siswa/DetailTugas';
 import DashboardPenilaian from './components/siswa/Penilaian';
 import DashboardPresensi from './components/siswa/presensi';
+import DashboardTugas from './components/siswa/DashboardTugas';
 
 // Layout admin
 import DashboardAkademik from './components/admin/dashboard-akademik';
@@ -75,6 +76,7 @@ function App() {
           <Route path="materi/:id" element={<DetailMateri />} />
           <Route path="tugas/:id" element={<DetailTugas />} />
           <Route index element={<Navigate to="dashboard" />} />
+          <Route path="tugas" element={<DashboardTugas />} />
         </Route>
 
         {/* === Guru Layout === */}

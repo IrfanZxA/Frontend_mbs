@@ -1,68 +1,80 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import CardBox from './cardbox';
 import Sidebar from '../sidebar';
-import { useEffect } from 'react';
 
 const Dashboard = () => {
   const [showSidebar, setShowSidebar] = useState(false);
   const toggleSidebar = () => setShowSidebar(!showSidebar);
-  const [profil, setProfil] = useState(null);
 
- useEffect(() => {
-  const fetchProfile = async () => {
+  const [profil, setProfil] = useState(null);
+  const [tugas, setTugas] = useState([]);
+  const [jadwalHariIni, setJadwalHariIni] = useState([]);
+
+  useEffect(() => {
     const token = localStorage.getItem('token');
     const role = localStorage.getItem('role');
 
-    try {
-      const response = await fetch(`http://localhost:5000/${role}/profile`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+    const fetchProfile = async () => {
+      try {
+        const response = await fetch(`http://localhost:5000/${role}/profile`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-      const data = await response.json();
-      setProfil(data);
-    } catch (error) {
-      console.error('Gagal mengambil profil:', error);
-    }
-  };
+        const data = await response.json();
+        setProfil(data);
+      } catch (error) {
+        console.error('Gagal mengambil profil:', error);
+      }
+    };
 
-  fetchProfile();
-}, []);
-  
+    const fetchTugas = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/siswa/tugas', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await response.json();
+        setTugas(data);
+      } catch (error) {
+        console.error('Gagal mengambil data tugas:', error);
+      }
+    };
+
+    const fetchJadwal = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/siswa/jadwal-hari-ini", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const data = await response.json();
+        setJadwalHariIni(data);
+      } catch (error) {
+        console.error("Gagal mengambil jadwal:", error);
+      }
+    };
+
+    fetchProfile();
+    fetchTugas();
+    fetchJadwal();
+  }, []);
+
   return (
     <div className="d-flex">
-      {/* ========== TOMBOL HAMBURGER DI HEADER SAJA ========== */}
-      {/* Jika ingin ditampilkan di header atas, pindahkan tombol ini ke dalam Sidebar atau Header */}
-      {/* <button
-        className="btn btn-light position-absolute m-2"
-        onClick={toggleSidebar}
-        style={{ zIndex: 1000 }}
-      >
-        <i className="bi bi-list fs-4"></i>
-      </button> */}
-
-      {/* Sidebar */}
-      {showSidebar && (
-        <div className="bg-white border-end p-3" style={{ width: '200px', height: '100vh' }}>
-          <Sidebar />
-        </div>
-      )}
-
-      {/* Main Content */}
       <div className="p-4" style={{ flexGrow: 1, backgroundColor: '#f9f9f9' }}>
         <h5>Selamat Datang</h5>
 
-        {/* Welcome + Calendar */}
         <div className="row mb-4">
           <div className="col-md-8">
             <div className="bg-white d-flex justify-content-between align-items-center p-4 rounded shadow-sm h-100">
               <div>
-                <h5 className="fw-bold">
-  {profil?.siswa?.nama_lengkap ? `Hallo ${profil.siswa.nama_lengkap}.` : 'Hallo Siswa.'}
-</h5>
+                <h5 className="fw-bold">Hallo {profil?.nama_lengkap || '...'}</h5>
                 <p className="text-muted">
-                  Kami di sini untuk mendukung Anda dalam perjalanan belajar Anda. Ikuti kelas-kelas Anda dan teruslah maju menuju tujuan Anda.
+                  Kami di sini untuk mendukung Anda dalam perjalanan belajar Anda.
                 </p>
               </div>
               <img src="/images/human-sitting.png" alt="Human Illustration" height="120" />
@@ -70,13 +82,11 @@ const Dashboard = () => {
           </div>
           <div className="col-md-4">
             <CardBox title="Kalender" icon="calendar3">
-              {/* ICON START */}
               <div className="d-flex justify-content-around mb-2">
                 <i className="bi bi-calendar-event fs-4 text-primary"></i>
                 <i className="bi bi-calendar-check fs-4 text-success"></i>
                 <i className="bi bi-calendar-x fs-4 text-danger"></i>
               </div>
-              {/* ICON END */}
               <div className="text-center">
                 <strong>September 2025</strong>
                 <p className="mb-0">3 | 4 | 13</p>
@@ -85,56 +95,43 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* 3 Cards Below */}
         <div className="row">
-          {/* Box Tugas & Ujian */}
           <div className="col-md-4 mb-4">
             <CardBox title="Pengingat Tugas & Ujian" icon="clipboard-check-fill">
               <ul className="ps-3 small">
-                {/* ICON START */}
-                <li>
-                  <i className="bi bi-journal-text me-2 text-primary"></i>
-                  Tugas Matematika - <span className="text-muted">3 Juli</span>
-                </li>
-                <li>
-                  <i className="bi bi-journal-text me-2 text-success"></i>
-                  Tugas Sejarah - <span className="text-muted">4 Juli</span>
-                </li>
-                <li>
-                  <i className="bi bi-clipboard2-check-fill me-2 text-danger"></i>
-                  Ujian Biologi - <span className="text-muted">13 Juli</span>
-                </li>
-                {/* ICON END */}
+                {tugas.length === 0 ? (
+                  <li className="text-muted">Tidak ada tugas saat ini</li>
+                ) : (
+                  tugas.map((item, index) => (
+                    <li key={index}>
+                      <i className="bi bi-journal-text me-2 text-primary"></i>
+                      {item.judul} - <span className="text-muted">{item.tanggal_deadline}</span>
+                    </li>
+                  ))
+                )}
               </ul>
             </CardBox>
           </div>
 
-          {/* Box Jadwal Pelajaran */}
           <div className="col-md-4 mb-4">
             <CardBox title="Jadwal Pelajaran Hari Ini" icon="clock-fill">
               <ul className="ps-3 small">
-                {/* ICON START */}
-                <li>
-                  <i className="bi bi-clock me-2 text-info"></i>
-                  Matematika: 07.00 - 09.00
-                </li>
-                <li>
-                  <i className="bi bi-clock me-2 text-warning"></i>
-                  Fisika: 10.00 - 12.00
-                </li>
-                <li>
-                  <i className="bi bi-clock me-2 text-success"></i>
-                  Bahasa Indonesia: 13.00 - 15.00
-                </li>
-                {/* ICON END */}
+                {Array.isArray(jadwalHariIni) && jadwalHariIni.length === 0 ? (
+                  <li className="text-muted">Tidak ada jadwal hari ini</li>
+                ) : (
+                  jadwalHariIni.map((item, index) => (
+                    <li key={index}>
+                      <i className="bi bi-clock me-2 text-info"></i>
+                      {item.nama_mapel}: {item.jam_mulai.slice(0, 5)} - {item.jam_selesai.slice(0, 5)}
+                    </li>
+                  ))
+                )}
               </ul>
             </CardBox>
           </div>
 
-          {/* Box Timeline Akademik */}
           <div className="col-md-4 mb-4">
             <CardBox title="Timeline Akademik" icon="journal-text">
-              {/* ICON START */}
               <div className="small">
                 <p className="mb-1"><strong>September</strong></p>
                 <ul className="ps-3">
@@ -148,7 +145,6 @@ const Dashboard = () => {
                   </li>
                 </ul>
               </div>
-              {/* ICON END */}
             </CardBox>
           </div>
         </div>
