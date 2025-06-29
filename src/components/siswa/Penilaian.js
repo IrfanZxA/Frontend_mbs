@@ -1,6 +1,9 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
-const DashboardPenilaian = () => {
+const Penilaian = () => {
+  const navigate = useNavigate();
+
   const subjects = [
     { no: 1, name: 'Bahasa Indonesia', code: 'A1' },
     { no: 2, name: 'Bahasa Inggris', code: 'A2' },
@@ -18,28 +21,28 @@ const DashboardPenilaian = () => {
     { no: 14, name: 'Akidah akhlak', code: 'A14' },
   ];
 
+  const handleClick = (subjectCode) => {
+    navigate(`/siswa/penilaian/${subjectCode}`);
+  };
+
   return (
     <div className="container-fluid mt-4" style={{ maxWidth: '900px' }}>
-      {/* Judul */}
       <h5 className="mb-3">Penilaian</h5>
 
-      {/* Card Info */}
       <div
         className="p-3 mb-3 rounded"
         style={{
           backgroundColor: '#d2e8f7',
           fontWeight: 'bold',
           boxShadow: '0 2px 4px rgba(255, 255, 255, 0.07)',
-          color: 'white'  
+          color: 'white',
         }}
       >
         "Nilai Tugas, Uts/Uas, Rata" nilai mata pelajaran
       </div>
 
-      {/* Deskripsi */}
       <p>Pilih mata pelajaran untuk melihat nilai</p>
 
-      {/* Tabel */}
       <div className="table-responsive">
         <table
           className="table"
@@ -51,7 +54,7 @@ const DashboardPenilaian = () => {
         >
           <thead>
             <tr style={{ backgroundColor: '#d9d9d9', textAlign: 'center' }}>
-              <th style={{ backgroundColor: '#d9d9d9', width: '80px'  }}>No</th>
+              <th style={{ backgroundColor: '#d9d9d9', width: '80px' }}>No</th>
               <th style={{ backgroundColor: '#d2e8f7', border: '2px solid white' }}>Mata pelajaran</th>
               <th style={{ backgroundColor: '#d9d9d9', width: '100px' }}>Kode</th>
             </tr>
@@ -60,7 +63,15 @@ const DashboardPenilaian = () => {
             {subjects.map((subject) => (
               <tr key={subject.no} style={{ textAlign: 'center' }}>
                 <td style={{ backgroundColor: '#d9d9d9', border: '2px solid white' }}>{subject.no}</td>
-                <td style={{ backgroundColor: '#d2e8f7', border: '2px solid white' }}>
+                <td
+                  style={{
+                    backgroundColor: '#d2e8f7',
+                    border: '2px solid white',
+                    cursor: 'pointer',
+                    color: 'black',
+                  }}
+                  onClick={() => handleClick(subject.code)}
+                >
                   {subject.name}
                 </td>
                 <td style={{ backgroundColor: '#d9d9d9', border: '2px solid white' }}>{subject.code}</td>
@@ -73,4 +84,4 @@ const DashboardPenilaian = () => {
   );
 };
 
-export default DashboardPenilaian;
+export default Penilaian;
