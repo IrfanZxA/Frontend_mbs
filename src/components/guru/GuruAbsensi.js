@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 
 const GuruAbsensi = () => {
   const [selectedInputKelas, setSelectedInputKelas] = useState('');
   const [selectedRekapKelas, setSelectedRekapKelas] = useState('');
   const [showInputForm, setShowInputForm] = useState(false);
   const [showRekapForm, setShowRekapForm] = useState(false);
+  const [siswaList, setSiswaList] = useState([]);
+  const [absensiData, setAbsensiData] = useState({});
+  const [rekapData, setRekapData] = useState({});
 
   const kelasOptions = [
     'Kelas 7A', 'Kelas 7B', 'Kelas 7C', 'Kelas 7D',
@@ -12,22 +16,55 @@ const GuruAbsensi = () => {
     'Kelas 9A', 'Kelas 9B', 'Kelas 9C', 'Kelas 9D',
   ];
 
-  const siswaList = Array.from({ length: 6 }, (_, index) => ({
-    id: index + 1,
-    nama: '', // akan diisi backend
-  }));
-
-  const [absensiData, setAbsensiData] = useState({});
-  const [rekapData, setRekapData] = useState({}); // Dummy rekap data
-
-  const handleChangeInputKelas = (value) => {
+  const handleChangeInputKelas = async (value) => {
     setSelectedInputKelas(value);
     setShowInputForm(!!value);
+    setAbsensiData({});
+    if (!value) return;
+
+    const kelasId = kelasOptions.indexOf(value) + 1;
+    const token = localStorage.getItem("token");
+
+    try {
+      const res = await axios.get(`http://localhost:5000/absensi/siswa/${kelasId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSiswaList(res.data);
+    } catch (err) {
+      console.error("Gagal ambil siswa:", err);
+      alert("Gagal mengambil data siswa");
+    }
   };
 
-  const handleChangeRekapKelas = (value) => {
+  const handleChangeRekapKelas = async (value) => {
     setSelectedRekapKelas(value);
     setShowRekapForm(!!value);
+    if (!value) return;
+
+    const kelasId = kelasOptions.indexOf(value) + 1;
+    const token = localStorage.getItem("token");
+
+    try {
+      const res = await axios.get(`http://localhost:5000/absensi/rekap/${kelasId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const formatted = {};
+      res.data.forEach((item) => {
+        formatted[item.siswa_id] = {
+          nama: item.nama_lengkap,
+          Hadir: item.hadir,
+          Izin: item.izin,
+          Alfa: item.alfa,
+        };
+      });
+
+      setRekapData(formatted);
+      setSiswaList(res.data); // agar daftar nama siswa tetap bisa ditampilkan di tabel
+    } catch (err) {
+      console.error("Gagal ambil rekap absensi:", err);
+      alert("Gagal mengambil rekap absensi");
+    }
   };
 
   const handleRadioChange = (id, status) => {
@@ -37,9 +74,33 @@ const GuruAbsensi = () => {
     }));
   };
 
+  const handleSubmitAbsensi = async () => {
+    const token = localStorage.getItem("token");
+    const tanggal = new Date().toISOString().split("T")[0];
+    const kelasId = kelasOptions.indexOf(selectedInputKelas) + 1;
+    const jadwalId = 1; // nanti disesuaikan kalau sudah dinamis
+
+    const payload = siswaList.map((siswa) => ({
+      siswa_id: siswa.id,
+      jadwal_id: jadwalId,
+      tanggal,
+      status: absensiData[siswa.id] || "Alfa",
+    }));
+
+    try {
+      await axios.post("http://localhost:5000/absensi/bulk", payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      alert("Absensi berhasil disimpan");
+    } catch (err) {
+      console.error("Gagal simpan absensi:", err);
+      alert("Gagal menyimpan absensi");
+    }
+  };
+
   return (
     <div style={{ padding: '20px' }}>
-      {/* BOX INPUT ABSENSI */}
+      {/* INPUT ABSENSI */}
       <div style={{ marginBottom: '20px' }}>
         <label htmlFor="inputKelas" style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>
           Menginput Absensi
@@ -57,7 +118,6 @@ const GuruAbsensi = () => {
         </select>
       </div>
 
-      {/* POPUP INPUT ABSENSI */}
       {showInputForm && (
         <div style={popupStyle}>
           <h3>Form Input Absensi</h3>
@@ -75,40 +135,39 @@ const GuruAbsensi = () => {
               {siswaList.map((siswa, index) => (
                 <tr key={siswa.id}>
                   <td style={tdStyle}>{index + 1}</td>
-                  <td style={tdStyle}></td>
-                  <td style={tdStyle}>
-                    <input
-                      type="radio"
-                      name={`absensi-${siswa.id}`}
-                      checked={absensiData[siswa.id] === 'Hadir'}
-                      onChange={() => handleRadioChange(siswa.id, 'Hadir')}
-                    />
-                  </td>
-                  <td style={tdStyle}>
-                    <input
-                      type="radio"
-                      name={`absensi-${siswa.id}`}
-                      checked={absensiData[siswa.id] === 'Izin'}
-                      onChange={() => handleRadioChange(siswa.id, 'Izin')}
-                    />
-                  </td>
-                  <td style={tdStyle}>
-                    <input
-                      type="radio"
-                      name={`absensi-${siswa.id}`}
-                      checked={absensiData[siswa.id] === 'Alfa'}
-                      onChange={() => handleRadioChange(siswa.id, 'Alfa')}
-                    />
-                  </td>
+                  <td style={tdStyle}>{siswa.nama_lengkap}</td>
+                  {["Hadir", "Izin", "Alfa"].map((status) => (
+                    <td style={tdStyle} key={status}>
+                      <input
+                        type="radio"
+                        name={`absensi-${siswa.id}`}
+                        checked={absensiData[siswa.id] === status}
+                        onChange={() => handleRadioChange(siswa.id, status)}
+                      />
+                    </td>
+                  ))}
                 </tr>
               ))}
             </tbody>
           </table>
+          <button
+            onClick={handleSubmitAbsensi}
+            style={{
+              marginTop: '15px',
+              padding: '8px 16px',
+              borderRadius: '5px',
+              backgroundColor: '#007bff',
+              color: 'white',
+              border: 'none'
+            }}
+          >
+            Simpan Absensi
+          </button>
         </div>
       )}
 
-      {/* BOX REKAP ABSENSI */}
-      <div>
+      {/* REKAP */}
+      <div style={{ marginTop: '40px' }}>
         <label htmlFor="rekapKelas" style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>
           Rekap Absensi
         </label>
@@ -125,7 +184,6 @@ const GuruAbsensi = () => {
         </select>
       </div>
 
-      {/* POPUP REKAP ABSENSI */}
       {showRekapForm && (
         <div style={popupStyle}>
           <h3>Rekap Absensi Kelas {selectedRekapKelas}</h3>
@@ -140,13 +198,13 @@ const GuruAbsensi = () => {
               </tr>
             </thead>
             <tbody>
-              {siswaList.map((siswa, index) => (
-                <tr key={siswa.id}>
+              {Object.entries(rekapData).map(([id, data], index) => (
+                <tr key={id}>
                   <td style={tdStyle}>{index + 1}</td>
-                  <td style={tdStyle}></td>
-                  <td style={tdStyle}>{rekapData[siswa.id]?.Hadir || '-'}</td>
-                  <td style={tdStyle}>{rekapData[siswa.id]?.Izin || '-'}</td>
-                  <td style={tdStyle}>{rekapData[siswa.id]?.Alfa || '-'}</td>
+                  <td style={tdStyle}>{data.nama}</td>
+                  <td style={tdStyle}>{data.Hadir ?? 0}</td>
+                  <td style={tdStyle}>{data.Izin ?? 0}</td>
+                  <td style={tdStyle}>{data.Alfa ?? 0}</td>
                 </tr>
               ))}
             </tbody>
