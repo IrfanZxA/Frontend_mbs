@@ -63,6 +63,43 @@ const Dashboard = () => {
     fetchJadwal();
   }, []);
 
+  const [currentDate, setCurrentDate] = useState(new Date());
+const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
+  'August', 'September', 'October', 'November', 'December'];
+
+const renderCalendar = () => {
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+  const firstDayIndex = new Date(year, month, 1).getDay(); // 0 = Sunday
+  const lastDate = new Date(year, month + 1, 0).getDate();
+
+  const calendar = [];
+  let day = 1 - ((firstDayIndex + 6) % 7); // Adjust so Monday is first
+
+  for (let i = 0; i < 6; i++) {
+    const row = [];
+    for (let j = 0; j < 7; j++) {
+      if (day > 0 && day <= lastDate) {
+        const isToday = new Date().getDate() === day &&
+          new Date().getMonth() === month &&
+          new Date().getFullYear() === year;
+        row.push(
+          <td key={j}>
+            <div style={isToday ? styles.dayActive : styles.day}>
+              {day.toString().padStart(2, '0')}
+            </div>
+          </td>
+        );
+      } else {
+        row.push(<td key={j}></td>);
+      }
+      day++;
+    }
+    calendar.push(<tr key={i}>{row}</tr>);
+  }
+  return calendar;
+};
+
   return (
     <div className="d-flex">
       <div className="p-4" style={{ flexGrow: 1, backgroundColor: '#f9f9f9' }}>
@@ -80,16 +117,28 @@ const Dashboard = () => {
               <img src="/images/human-sitting.png" alt="Human Illustration" height="120" />
             </div>
           </div>
-          <div className="col-md-4">
+         <div className="col-md-4">
             <CardBox title="Kalender" icon="calendar3">
-              <div className="d-flex justify-content-around mb-2">
-                <i className="bi bi-calendar-event fs-4 text-primary"></i>
-                <i className="bi bi-calendar-check fs-4 text-success"></i>
-                <i className="bi bi-calendar-x fs-4 text-danger"></i>
-              </div>
-              <div className="text-center">
-                <strong>September 2025</strong>
-                <p className="mb-0">3 | 4 | 13</p>
+              <div style={styles.container}>
+                <div style={styles.header}>
+                  <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))} style={styles.navButton}>
+                    &lt;
+                  </button>
+                  <strong>{monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}</strong>
+                  <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))} style={styles.navButton}>
+                    &gt;
+                  </button>
+                </div>
+                <table style={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th><th>S</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {renderCalendar()}
+                  </tbody>
+                </table>
               </div>
             </CardBox>
           </div>
@@ -150,7 +199,58 @@ const Dashboard = () => {
         </div>
       </div>
     </div>
+    
   );
+};
+
+const styles = {
+  container: {
+    textAlign: 'center',
+    fontFamily: 'sans-serif',
+    fontSize: '14px',
+    padding: '10px',
+    borderRadius: '8px',
+    boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+    backgroundColor: '#fff'
+  },
+  header: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '8px',
+    padding: '0 12px'
+  },
+  navButton: {
+    border: 'none',
+    backgroundColor: '#eee',
+    borderRadius: '4px',
+    padding: '2px 8px',
+    cursor: 'pointer'
+  },
+  table: {
+    width: '100%',
+    borderCollapse: 'collapse'
+  },
+  day: {
+    borderRadius: '50%',
+    width: '28px',
+    height: '28px',
+    margin: 'auto',
+    lineHeight: '28px'
+  },
+  dayActive: {
+    backgroundColor: '#b00020',
+    color: '#fff',
+    borderRadius: '50%',
+    width: '28px',
+    height: '28px',
+    margin: 'auto',
+    lineHeight: '28px',
+    fontWeight: 'bold'
+  },
+  muted: {
+    color: '#ccc'
+  }
 };
 
 export default Dashboard;
