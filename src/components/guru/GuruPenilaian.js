@@ -1,4 +1,6 @@
+// GuruPenilaian.js
 import React, { useState } from 'react';
+import axios from 'axios';
 
 const GuruPenilaian = () => {
   const kelasOptions = [
@@ -9,58 +11,165 @@ const GuruPenilaian = () => {
 
   const [selectedKelasInput, setSelectedKelasInput] = useState('');
   const [selectedKelasRekap, setSelectedKelasRekap] = useState('');
+  const [siswaList, setSiswaList] = useState([]);
   const [namaSiswa, setNamaSiswa] = useState('');
   const [jenisPenilaian, setJenisPenilaian] = useState('');
-  const [namaTugas, setNamaTugas] = useState('');
   const [nilai, setNilai] = useState('');
   const [showNotif, setShowNotif] = useState(false);
   const [editPopupOpen, setEditPopupOpen] = useState(false);
   const [showEditNotif, setShowEditNotif] = useState(false);
   const [rekapPopupOpen, setRekapPopupOpen] = useState(false);
+  const [listTugas, setListTugas] = useState([]);
+  const [selectedTugasId, setSelectedTugasId] = useState('');
+  const [rekapNilai, setRekapNilai] = useState([]);
+  const [editData, setEditData] = useState(null);
 
-  const isFormComplete = namaSiswa && selectedKelasInput && jenisPenilaian && namaTugas && nilai;
+  const isFormComplete =
+    namaSiswa && selectedKelasInput && jenisPenilaian && nilai &&
+    (jenisPenilaian === 'Tugas' ? selectedTugasId : true);
 
-  const handleSubmit = () => {
-    if (isFormComplete) {
-      setShowNotif(true);
-      setTimeout(() => setShowNotif(false), 3000);
+  const handleChangeKelasInput = async (kelasValue) => {
+    setSelectedKelasInput(kelasValue);
+    setNamaSiswa('');
+    const kelasId = kelasOptions.indexOf(kelasValue) + 1;
+    const token = localStorage.getItem("token");
+
+    try {
+      const res = await axios.get(`http://localhost:5000/absensi/siswa/${kelasId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSiswaList(res.data);
+
+      const tugasRes = await axios.get(`http://localhost:5000/tugas/guru`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setListTugas(tugasRes.data);
+    } catch (err) {
+      alert("Gagal ambil data siswa atau tugas");
     }
   };
 
-  const handleEditSave = () => {
-    setShowEditNotif(true);
-    setTimeout(() => {
-      setShowEditNotif(false);
-      setEditPopupOpen(false);
-    }, 2000);
+  const handleSubmit = async () => {
+    if (!isFormComplete) return;
+
+    const token = localStorage.getItem("token");
+    const mapel_id = localStorage.getItem("mapel_id");
+    const tanggal = new Date().toISOString().split("T")[0];
+    const kelas_id = kelasOptions.indexOf(selectedKelasInput) + 1;
+
+    const payload = {
+      siswa_id: namaSiswa,
+      mapel_id,
+      kategori: jenisPenilaian,
+      nilai: parseInt(nilai),
+      tanggal,
+      kelas_id,
+    };
+
+    if (jenisPenilaian === 'Tugas') {
+      payload.tugas_id = selectedTugasId;
+    }
+
+    try {
+      await axios.post("http://localhost:5000/nilai", payload, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setShowNotif(true);
+      setTimeout(() => setShowNotif(false), 3000);
+      setNamaSiswa('');
+      setJenisPenilaian('');
+      setSelectedTugasId('');
+      setNilai('');
+    } catch (err) {
+      alert("Gagal menyimpan nilai!");
+      console.error(err);
+    }
   };
 
-  const handleRekapChange = (e) => {
-    setSelectedKelasRekap(e.target.value);
-    if (e.target.value) {
+  const handleRekapChange = async (e) => {
+    const selected = e.target.value;
+    setSelectedKelasRekap(selected);
+    const kelasId = kelasOptions.indexOf(selected) + 1;
+
+    if (selected) {
       setRekapPopupOpen(true);
+      const token = localStorage.getItem("token");
+
+      try {
+        const res = await axios.get(`http://localhost:5000/nilai/rekap/${kelasId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setRekapNilai(res.data);
+      } catch (err) {
+        alert("Gagal ambil rekap nilai");
+      }
+    }
+  };
+
+  const openEditPopup = (item) => {
+    setEditData(item);
+    setJenisPenilaian(item.kategori);
+    setNilai(item.nilai);
+    setSelectedTugasId(item.tugas_id || '');
+    setEditPopupOpen(true);
+  };
+
+  const handleEditSave = async () => {
+    const token = localStorage.getItem("token");
+    const mapel_id = localStorage.getItem("mapel_id");
+    const tanggal = new Date().toISOString().split("T")[0];
+
+    const payload = {
+      siswa_id: editData.siswa_id,
+      mapel_id,
+      kategori: jenisPenilaian,
+      nilai: parseInt(nilai),
+      tanggal,
+      kelas_id: editData.kelas_id
+    };
+
+    if (jenisPenilaian === 'Tugas') {
+      payload.tugas_id = selectedTugasId;
+    }
+
+    try {
+      await axios.put(`http://localhost:5000/nilai/${editData.id}`, payload, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setShowEditNotif(true);
+      setTimeout(() => {
+        setShowEditNotif(false);
+        setEditPopupOpen(false);
+        handleRekapChange({ target: { value: selectedKelasRekap } });
+      }, 2000);
+    } catch (err) {
+      alert("Gagal mengupdate nilai!");
     }
   };
 
   return (
     <div style={{ padding: '20px', marginLeft: '150px', position: 'relative' }}>
       <h2>Penilaian</h2>
-
       {showNotif && <div style={notifStyle}>Nilai berhasil disimpan!</div>}
 
       <div style={boxStyle}>
         <h4>Input Nilai</h4>
-
         <div style={formGroup}>
-          <label>Nama Siswa</label>
-          <input type="text" style={inputStyle} value={namaSiswa} onChange={(e) => setNamaSiswa(e.target.value)} />
+          <label>Kelas</label>
+          <select style={inputStyle} value={selectedKelasInput} onChange={(e) => handleChangeKelasInput(e.target.value)}>
+            <option value="">Pilih Kelas</option>
+            {kelasOptions.map((kelas, i) => <option key={i} value={kelas}>{kelas}</option>)}
+          </select>
         </div>
 
         <div style={formGroup}>
-          <label>Kelas</label>
-          <select style={inputStyle} value={selectedKelasInput} onChange={(e) => setSelectedKelasInput(e.target.value)}>
-            <option value="">Pilih Kelas</option>
-            {kelasOptions.map((kelas, i) => <option key={i} value={kelas}>{kelas}</option>)}
+          <label>Nama Siswa</label>
+          <select style={inputStyle} value={namaSiswa} onChange={(e) => setNamaSiswa(e.target.value)}>
+            <option value="">Pilih Siswa</option>
+            {siswaList.map((siswa) => (
+              <option key={siswa.id} value={siswa.id}>{siswa.nama_lengkap}</option>
+            ))}
           </select>
         </div>
 
@@ -73,10 +182,17 @@ const GuruPenilaian = () => {
           </div>
         </div>
 
-        <div style={formGroup}>
-          <label>Nama Tugas</label>
-          <input type="text" style={inputStyle} value={namaTugas} onChange={(e) => setNamaTugas(e.target.value)} />
-        </div>
+        {jenisPenilaian === 'Tugas' && (
+          <div style={formGroup}>
+            <label>Nama Tugas</label>
+            <select style={inputStyle} value={selectedTugasId} onChange={(e) => setSelectedTugasId(e.target.value)}>
+              <option value="">Pilih Tugas</option>
+              {listTugas.map((tugas) => (
+                <option key={tugas.id} value={tugas.id}>{tugas.judul}</option>
+              ))}
+            </select>
+          </div>
+        )}
 
         <div style={formGroup}>
           <label>Nilai</label>
@@ -116,17 +232,15 @@ const GuruPenilaian = () => {
                 </tr>
               </thead>
               <tbody>
-                {Array.from({ length: 8 }).map((_, i) => (
+                {rekapNilai.map((item, i) => (
                   <tr key={i}>
                     <td style={tdStyle}>{i + 1}</td>
-                    <td style={tdStyle}></td>
-                    <td style={tdStyle}></td>
-                    <td style={tdStyle}></td>
-                    <td style={tdStyle}></td>
-                    <td style={tdStyle}></td>
-                    <td style={tdStyle}>
-                      <button style={editBtn} onClick={() => setEditPopupOpen(true)}>Edit</button>
-                    </td>
+                    <td style={tdStyle}>{item.nama_lengkap}</td>
+                    <td style={tdStyle}>{item.tugas || '-'}</td>
+                    <td style={tdStyle}>{item.uts || '-'}</td>
+                    <td style={tdStyle}>{item.uas || '-'}</td>
+                    <td style={tdStyle}>{item.rata_rata}</td>
+                    <td style={tdStyle}><button style={editBtn} onClick={() => openEditPopup(item)}>Edit</button></td>
                   </tr>
                 ))}
               </tbody>
@@ -138,19 +252,29 @@ const GuruPenilaian = () => {
 
       {editPopupOpen && (
         <div style={modalOverlay}>
-          <div style={modalBox}>
+          <div style={popupStyle}>
             <h4>Edit Nilai</h4>
-            <div style={formGroup}><label>Nama Siswa</label><input type="text" style={inputStyle} /></div>
+            <div style={formGroup}><label>Nama Siswa</label><input type="text" style={inputStyle} value={editData?.nama_lengkap || ''} disabled /></div>
             <div style={formGroup}>
               <label>Jenis Penilaian</label>
               <div>
-                <label><input type="radio" name="edit_penilaian" /> Tugas</label>
-                <label style={{ marginLeft: '15px' }}><input type="radio" name="edit_penilaian" /> UTS</label>
-                <label style={{ marginLeft: '15px' }}><input type="radio" name="edit_penilaian" /> UAS</label>
+                <label><input type="radio" name="edit_penilaian" value="Tugas" checked={jenisPenilaian === 'Tugas'} onChange={(e) => setJenisPenilaian(e.target.value)} /> Tugas</label>
+                <label style={{ marginLeft: '15px' }}><input type="radio" name="edit_penilaian" value="UTS" checked={jenisPenilaian === 'UTS'} onChange={(e) => setJenisPenilaian(e.target.value)} /> UTS</label>
+                <label style={{ marginLeft: '15px' }}><input type="radio" name="edit_penilaian" value="UAS" checked={jenisPenilaian === 'UAS'} onChange={(e) => setJenisPenilaian(e.target.value)} /> UAS</label>
               </div>
             </div>
-            <div style={formGroup}><label>Nama Tugas</label><input type="text" style={inputStyle} /></div>
-            <div style={formGroup}><label>Nilai</label><input type="text" style={{ ...inputStyle, width: '100px' }} /></div>
+            {jenisPenilaian === 'Tugas' && (
+              <div style={formGroup}>
+                <label>Nama Tugas</label>
+                <select style={inputStyle} value={selectedTugasId} onChange={(e) => setSelectedTugasId(e.target.value)}>
+                  <option value="">Pilih Tugas</option>
+                  {listTugas.map((tugas) => (
+                    <option key={tugas.id} value={tugas.id}>{tugas.judul}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <div style={formGroup}><label>Nilai</label><input type="text" style={{ ...inputStyle, width: '100px' }} value={nilai} onChange={(e) => setNilai(e.target.value)} /></div>
             <div style={{ marginTop: '16px' }}>
               <button onClick={() => setEditPopupOpen(false)} style={{ marginRight: '10px' }}>Batal</button>
               <button onClick={handleEditSave} style={buttonStyle}>Simpan</button>
@@ -163,11 +287,41 @@ const GuruPenilaian = () => {
   );
 };
 
-// Style constants...
-// (style objects seperti boxStyle, formGroup, inputStyle, buttonStyle, etc tetap tidak berubah)
+const inputStyle = {
+  padding: '8px',
+  borderRadius: '5px',
+  border: '1px solid #ccc',
+  marginTop: '4px'
+};
 
+const tableStyle = {
+  width: '100%',
+  borderCollapse: 'collapse',
+  marginTop: '20px'
+};
 
+const modalOverlay = {
+  position: 'fixed',
+  top: 0,
+  left: 0,
+  width: '100vw',
+  height: '100vh',
+  backgroundColor: 'rgba(0,0,0,0.5)',
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  zIndex: 1000
+};
 
+const popupStyle = {
+  backgroundColor: '#fff',
+  padding: '20px',
+  borderRadius: '10px',
+  maxWidth: '800px',
+  width: '100%',
+  maxHeight: '80vh',
+  overflowY: 'auto'
+};
 
 const boxStyle = {
   border: '1px solid #ccc',
@@ -182,13 +336,6 @@ const formGroup = {
   marginBottom: '12px',
   display: 'flex',
   flexDirection: 'column'
-};
-
-const inputStyle = {
-  padding: '8px',
-  borderRadius: '5px',
-  border: '1px solid #ccc',
-  marginTop: '4px'
 };
 
 const buttonStyle = {
@@ -219,68 +366,27 @@ const notifStyle = {
   boxShadow: '0 2px 12px rgba(0,0,0,0.2)',
   zIndex: 9999,
   fontWeight: 'bold',
-  fontSize: '16px',
-};
-
-const popupStyle = {
-  border: '1px solid #ccc',
-  padding: '16px',
-  borderRadius: '8px',
-  backgroundColor: '#fff',
-  maxWidth: '1000px',
-  width: '100%',
-  marginTop: '20px',
-  marginLeft: '-50px',
-  boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
-};
-
-const tableStyle = {
-  width: '100%',
-  borderCollapse: 'collapse',
-  marginTop: '10px',
+  fontSize: '16px'
 };
 
 const thStyle = {
   border: '1px solid #ccc',
   padding: '8px',
-  backgroundColor: '#f5f5f5',
-  textAlign: 'center',
+  backgroundColor: '#f2f2f2'
 };
 
 const tdStyle = {
   border: '1px solid #ccc',
-  padding: '8px',
-  textAlign: 'center',
+  padding: '8px'
 };
 
 const editBtn = {
-  padding: '4px 8px',
-  border: '1px solid #007bff',
-  borderRadius: '4px',
-  backgroundColor: '#007bff',
+  padding: '5px 10px',
+  backgroundColor: '#28a745',
   color: '#fff',
+  border: 'none',
+  borderRadius: '5px',
   cursor: 'pointer'
-};
-
-const modalOverlay = {
-  position: 'fixed',
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-  zIndex: 1000
-};
-
-const modalBox = {
-  backgroundColor: '#fff',
-  padding: '24px',
-  borderRadius: '8px',
-  width: '400px',
-  position: 'relative'
 };
 
 export default GuruPenilaian;

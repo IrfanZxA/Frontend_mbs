@@ -1,28 +1,57 @@
 import React, { useState } from 'react';
+import axios from 'axios';
+
 
 const NonaktifkanAkun = ({ isSidebarOpen }) => {
   const [showPopup, setShowPopup] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
-  const [formData, setFormData] = useState({
-    nama: '',
-    nis: '',
-    kelas: '',
-    status: '',
-    alasan: '',
-    tanggal: '',
-  });
+  const [searchNis, setSearchNis] = useState('');
 
-  const handleCariClick = () => {
-    setShowPopup(true);
+  const [formData, setFormData] = useState({
+  siswaId: '', // ID dari database
+  nama: '',
+  nis: '',
+  kelas: '',
+  status: '',
+  alasan: '',
+  tanggal: '',
+}); 
+
+const handleCariClick = async () => {
+  try {
+    const res = await axios.get(`http://localhost:5000/admin/siswa`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+    });
+
+    // Cari siswa berdasarkan NIS atau nama
+    const siswa = res.data.find(
+      (s) =>
+        s.nis?.toLowerCase() === searchNis.toLowerCase() ||
+        s.nama_lengkap?.toLowerCase().includes(searchNis.toLowerCase())
+    );
+
+    if (!siswa) {
+      return alert("Siswa tidak ditemukan.");
+    }
+
     setFormData({
-      nama: 'Aditya Ramadhan',
-      nis: '123456789',
-      kelas: '7 A',
-      status: 'Aktif',
+      siswaId: siswa.id,
+      nama: siswa.nama_lengkap,
+      nis: siswa.nis,
+      kelas: siswa.nama_kelas || '-',
+      status: siswa.aktif ? 'Aktif' : 'Nonaktif',
       alasan: '',
       tanggal: '',
     });
-  };
+
+    setShowPopup(true);
+  } catch (error) {
+    console.error("Gagal cari siswa:", error);
+    alert("Gagal mengambil data siswa.");
+  }
+};
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -31,10 +60,28 @@ const NonaktifkanAkun = ({ isSidebarOpen }) => {
 
   const handleClose = () => setShowPopup(false);
 
-  const handleNonaktifkanAkun = () => {
+const handleNonaktifkanAkun = async () => {
+  try {
+    await axios.patch(
+      `http://localhost:5000/admin/siswa/${formData.siswaId}/nonaktif`,
+      {
+        alasan: formData.alasan,
+        tanggal: formData.tanggal,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      }
+    );
+
     setShowPopup(false);
     setShowSuccessPopup(true);
-  };
+  } catch (error) {
+    console.error('Gagal menonaktifkan akun:', error);
+    alert('Gagal menonaktifkan akun siswa.');
+  }
+};
 
   return (
     <div
@@ -68,16 +115,19 @@ const NonaktifkanAkun = ({ isSidebarOpen }) => {
         <div style={{ marginBottom: '15px' }}>
           <label style={{ display: 'block', marginBottom: '5px' }}>Pencarian Siswa</label>
           <div style={{ position: 'relative' }}>
-            <input
-              type="text"
-              placeholder="Nama"
-              style={{
-                width: '100%',
-                padding: '8px 30px 8px 10px',
-                borderRadius: '4px',
-                border: '1px solid #ccc',
-              }}
-            />
+<input
+  type="text"
+  placeholder="NIS atau Nama"
+  value={searchNis}
+  onChange={(e) => setSearchNis(e.target.value)}
+  style={{
+    width: '100%',
+    padding: '8px 30px 8px 10px',
+    borderRadius: '4px',
+    border: '1px solid #ccc',
+  }}
+/>
+
             <span
               style={{
                 position: 'absolute',
@@ -91,19 +141,19 @@ const NonaktifkanAkun = ({ isSidebarOpen }) => {
           </div>
         </div>
 
-        <div style={{ marginBottom: '30px' }}>
-          <label style={{ display: 'block', marginBottom: '5px' }}>Status akun</label>
-          <input
-            type="text"
-            placeholder=""
-            style={{
-              width: '100%',
-              padding: '8px 10px',
-              borderRadius: '4px',
-              border: '1px solid #ccc',
-            }}
-          />
-        </div>
+<div style={{ marginBottom: '30px' }}>
+  <label style={{ display: 'block', marginBottom: '5px' }}>Status akun</label>
+  <div
+    style={{
+      padding: '8px 10px',
+      border: '1px solid #ccc',
+      borderRadius: '4px',
+      backgroundColor: '#f9f9f9',
+    }}
+  >
+    {formData.status || '-'}
+  </div>
+</div>
 
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
           <button

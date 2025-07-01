@@ -6,7 +6,8 @@ const GuruAbsensi = () => {
   const [selectedRekapKelas, setSelectedRekapKelas] = useState('');
   const [showInputForm, setShowInputForm] = useState(false);
   const [showRekapForm, setShowRekapForm] = useState(false);
-  const [siswaList, setSiswaList] = useState([]);
+  const [inputSiswaList, setInputSiswaList] = useState([]);
+  const [rekapSiswaList, setRekapSiswaList] = useState([]);
   const [absensiData, setAbsensiData] = useState({});
   const [rekapData, setRekapData] = useState({});
 
@@ -29,9 +30,10 @@ const GuruAbsensi = () => {
       const res = await axios.get(`http://localhost:5000/absensi/siswa/${kelasId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setSiswaList(res.data);
+      console.log("✅ Data siswa dari backend:", res.data);
+      setInputSiswaList(res.data);
     } catch (err) {
-      console.error("Gagal ambil siswa:", err);
+      console.error("❌ Gagal ambil siswa:", err);
       alert("Gagal mengambil data siswa");
     }
   };
@@ -55,14 +57,14 @@ const GuruAbsensi = () => {
           nama: item.nama_lengkap,
           Hadir: item.hadir,
           Izin: item.izin,
-          Alfa: item.alfa,
+          Alpha: item.alpha,
         };
       });
 
       setRekapData(formatted);
-      setSiswaList(res.data); // agar daftar nama siswa tetap bisa ditampilkan di tabel
+      setRekapSiswaList(res.data);
     } catch (err) {
-      console.error("Gagal ambil rekap absensi:", err);
+      console.error("❌ Gagal ambil rekap absensi:", err);
       alert("Gagal mengambil rekap absensi");
     }
   };
@@ -78,23 +80,27 @@ const GuruAbsensi = () => {
     const token = localStorage.getItem("token");
     const tanggal = new Date().toISOString().split("T")[0];
     const kelasId = kelasOptions.indexOf(selectedInputKelas) + 1;
-    const jadwalId = 1; // nanti disesuaikan kalau sudah dinamis
+    const jadwalId = 1;
 
-    const payload = siswaList.map((siswa) => ({
-      siswa_id: siswa.id,
-      jadwal_id: jadwalId,
-      tanggal,
-      status: absensiData[siswa.id] || "Alfa",
-    }));
+    const payload = inputSiswaList
+      .filter((siswa) => siswa.id)
+      .map((siswa) => ({
+        siswa_id: siswa.id,
+        jadwal_id: jadwalId,
+        tanggal,
+        status: absensiData[siswa.id] || "Alpha",
+      }));
+
+    console.log("📦 Payload absensi yang dikirim:", payload);
 
     try {
       await axios.post("http://localhost:5000/absensi/bulk", payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      alert("Absensi berhasil disimpan");
+      alert("✅ Absensi berhasil disimpan");
     } catch (err) {
-      console.error("Gagal simpan absensi:", err);
-      alert("Gagal menyimpan absensi");
+      console.error("❌ Gagal simpan absensi:", err);
+      alert("❌ Gagal menyimpan absensi");
     }
   };
 
@@ -102,14 +108,14 @@ const GuruAbsensi = () => {
     <div style={{ padding: '20px' }}>
       {/* INPUT ABSENSI */}
       <div style={{ marginBottom: '20px' }}>
-        <label htmlFor="inputKelas" style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>
+        <label htmlFor="inputKelas" style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px', fontSize: '18px' }}>
           Menginput Absensi
         </label>
         <select
           id="inputKelas"
           value={selectedInputKelas}
           onChange={(e) => handleChangeInputKelas(e.target.value)}
-          style={{ padding: '8px', width: '200px', borderRadius: '5px' }}
+          style={{ padding: '10px', width: '250px', borderRadius: '6px', fontSize: '16px' }}
         >
           <option value="">Pilih Kelas</option>
           {kelasOptions.map((kelas, index) => (
@@ -128,21 +134,22 @@ const GuruAbsensi = () => {
                 <th style={thStyle}>Nama</th>
                 <th style={thStyle}>Hadir</th>
                 <th style={thStyle}>Izin</th>
-                <th style={thStyle}>Alfa</th>
+                <th style={thStyle}>Alpha</th>
               </tr>
             </thead>
             <tbody>
-              {siswaList.map((siswa, index) => (
-                <tr key={siswa.id}>
+              {inputSiswaList.map((siswa, index) => (
+                <tr key={`siswa-${siswa.id}`}>
                   <td style={tdStyle}>{index + 1}</td>
                   <td style={tdStyle}>{siswa.nama_lengkap}</td>
-                  {["Hadir", "Izin", "Alfa"].map((status) => (
-                    <td style={tdStyle} key={status}>
+                  {["Hadir", "Izin", "Alpha"].map((status) => (
+                    <td style={tdStyle} key={`${siswa.id}-${status}`}>
                       <input
                         type="radio"
                         name={`absensi-${siswa.id}`}
+                        value={status}
                         checked={absensiData[siswa.id] === status}
-                        onChange={() => handleRadioChange(siswa.id, status)}
+                        onChange={(e) => handleRadioChange(siswa.id, e.target.value)}
                       />
                     </td>
                   ))}
@@ -154,11 +161,13 @@ const GuruAbsensi = () => {
             onClick={handleSubmitAbsensi}
             style={{
               marginTop: '15px',
-              padding: '8px 16px',
-              borderRadius: '5px',
+              padding: '10px 20px',
+              borderRadius: '6px',
               backgroundColor: '#007bff',
               color: 'white',
-              border: 'none'
+              border: 'none',
+              fontSize: '16px',
+              cursor: 'pointer'
             }}
           >
             Simpan Absensi
@@ -168,14 +177,14 @@ const GuruAbsensi = () => {
 
       {/* REKAP */}
       <div style={{ marginTop: '40px' }}>
-        <label htmlFor="rekapKelas" style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>
+        <label htmlFor="rekapKelas" style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px', fontSize: '18px' }}>
           Rekap Absensi
         </label>
         <select
           id="rekapKelas"
           value={selectedRekapKelas}
           onChange={(e) => handleChangeRekapKelas(e.target.value)}
-          style={{ padding: '8px', width: '200px', borderRadius: '5px' }}
+          style={{ padding: '10px', width: '250px', borderRadius: '6px', fontSize: '16px' }}
         >
           <option value="">Pilih Kelas</option>
           {kelasOptions.map((kelas, index) => (
@@ -194,17 +203,17 @@ const GuruAbsensi = () => {
                 <th style={thStyle}>Nama</th>
                 <th style={thStyle}>Hadir</th>
                 <th style={thStyle}>Izin</th>
-                <th style={thStyle}>Alfa</th>
+                <th style={thStyle}>Alpha</th>
               </tr>
             </thead>
             <tbody>
-              {Object.entries(rekapData).map(([id, data], index) => (
-                <tr key={id}>
+              {rekapSiswaList.map((item, index) => (
+                <tr key={`rekap-${item.siswa_id}`}>
                   <td style={tdStyle}>{index + 1}</td>
-                  <td style={tdStyle}>{data.nama}</td>
-                  <td style={tdStyle}>{data.Hadir ?? 0}</td>
-                  <td style={tdStyle}>{data.Izin ?? 0}</td>
-                  <td style={tdStyle}>{data.Alfa ?? 0}</td>
+                  <td style={tdStyle}>{item.nama_lengkap}</td>
+                  <td style={tdStyle}>{rekapData[item.siswa_id]?.Hadir ?? 0}</td>
+                  <td style={tdStyle}>{rekapData[item.siswa_id]?.Izin ?? 0}</td>
+                  <td style={tdStyle}>{rekapData[item.siswa_id]?.Alpha ?? 0}</td>
                 </tr>
               ))}
             </tbody>
@@ -217,13 +226,14 @@ const GuruAbsensi = () => {
 
 const popupStyle = {
   border: '1px solid #ccc',
-  padding: '16px',
-  borderRadius: '8px',
-  backgroundColor: '#fafafa',
-  maxWidth: '1000px',
+  padding: '20px',
+  borderRadius: '10px',
+  backgroundColor: '#ffffff',
+  maxWidth: '100%',
   width: '100%',
   marginTop: '20px',
   marginBottom: '30px',
+  fontSize: '16px',
 };
 
 const tableStyle = {
@@ -233,14 +243,16 @@ const tableStyle = {
 
 const thStyle = {
   border: '1px solid #ccc',
-  padding: '8px',
+  padding: '10px',
   textAlign: 'center',
+  fontSize: '16px',
 };
 
 const tdStyle = {
   border: '1px solid #ccc',
-  padding: '8px',
+  padding: '10px',
   textAlign: 'center',
+  fontSize: '15px',
 };
 
 export default GuruAbsensi;

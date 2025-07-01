@@ -22,7 +22,7 @@ import DashboardMateri from './components/siswa/dashboard-materi';
 import BahasaIndonesia from './components/siswa/BahasaIndonesia';
 import DetailMateri from './components/siswa/DetailMateri';
 import DetailTugas from './components/siswa/DetailTugas';
-import DashboardPenilaian from './components/siswa/Penilaian';
+import Penilaian from './components/siswa/Penilaian';
 import DashboardPresensi from './components/siswa/presensi';
 import DashboardTugas from './components/siswa/DashboardTugas';
 import RekapNilaiSiswa from './components/siswa/RekapNilaiSiswa';
@@ -41,6 +41,7 @@ import AdminPengaturan from './components/admin/admin-pengaturan';
 import TambahDataGuru from './components/admin/tambahdataguru';
 import EditJadwalGuru from './components/admin/editjadwalguru';
 import HapusGuruKeluar from './components/admin/hapusgurukeluar';
+
 function App() {
   return (
     <BrowserRouter>
@@ -57,7 +58,7 @@ function App() {
           <Route path="ManajemenAkademik/ManajemenSiswa/EditBiodataSiswa" element={<EditBiodataSiswa />} />
           <Route path="ManajemenAkademik/ManajemenSiswa/NonaktifkanAkun" element={<NonaktifkanAkun />} />
           <Route path="ManajemenAkademik/ManajemenGuru" element={<ManajemenGuru />} />
-          <Route path="ManajemenAkademik/ManajemenGuru/TambahDataGuru" element={<TambahDataGuru/>} />
+          <Route path="ManajemenAkademik/ManajemenGuru/TambahDataGuru" element={<TambahDataGuru />} />
           <Route path="ManajemenAkademik/ManajemenGuru/EditJadwalGuru" element={<EditJadwalGuru />} />
           <Route path="ManajemenAkademik/ManajemenGuru/HapusGuruKeluar" element={<HapusGuruKeluar />} />
           <Route index element={<Navigate to="dashboard-akademik" />} />
@@ -71,15 +72,14 @@ function App() {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="kelas" element={<DashboardKelas />} />
           <Route path="materi" element={<DashboardMateri />} />
-          <Route path="penilaian" element={<DashboardPenilaian />} />
+          <Route path="penilaian" element={<Penilaian />} />
+          <Route path="penilaian/:mapelId" element={<RekapNilaiSiswa />} />
           <Route path="presensi" element={<DashboardPresensi />} />
           <Route path="bahasa-indonesia" element={<BahasaIndonesia />} />
           <Route path="materi/:id" element={<DetailMateri />} />
           <Route path="tugas/:id" element={<DetailTugas />} />
-          <Route index element={<Navigate to="dashboard" />} />
           <Route path="tugas" element={<DashboardTugas />} />
-          <Route path="/siswa/penilaian" element={<DashboardPenilaian />} />
-          <Route path="/siswa/penilaian/:kodeMapel" element={<RekapNilaiSiswa />} /> 
+          <Route index element={<Navigate to="dashboard" />} />
         </Route>
 
         {/* === Guru Layout === */}

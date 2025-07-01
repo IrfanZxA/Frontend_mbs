@@ -2,7 +2,7 @@ import React from 'react';
 import { useEffect, useState } from 'react';
 
 
-const DashboardAkademik = ({ isSidebarOpen, setNamaLengkap }) => {
+const DashboardAkademik = ({ isSidebarOpen }) => {
 const [profil, setProfil] = useState(null);
 
 useEffect(() => {
@@ -19,14 +19,13 @@ useEffect(() => {
 
       const data = await response.json();
       setProfil(data);
-      setNamaLengkap(data?.admin?.nama_lengkap); // kirim ke luar
     } catch (error) {
       console.error('Gagal mengambil profil admin:', error);
     }
   };
 
   fetchProfile();
-}, [setNamaLengkap]);
+}, []);
 
   return (
     <div

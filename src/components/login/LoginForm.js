@@ -32,6 +32,9 @@ const LoginForm = () => {
       localStorage.setItem('token', data.token);
       localStorage.setItem('role', role);
 
+      if (role === 'guru') {
+      localStorage.setItem('mapel_id', data.guru.mapel_id);
+      }
       switch (role) {
         case 'admin':
           navigate('/admin');

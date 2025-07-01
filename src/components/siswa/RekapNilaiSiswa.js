@@ -1,13 +1,39 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import axios from 'axios';
 
 const RekapNilaiSiswa = () => {
-  const { kodeMapel } = useParams();
+  const { mapelId } = useParams(); // harusnya mapelId bukan kodeMapel
+  const [nilaiTugas, setNilaiTugas] = useState([]);
+  const [nilaiUjian, setNilaiUjian] = useState([]);
+
+  useEffect(() => {
+    const fetchNilai = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        console.log('mapelId:', mapelId);
+
+        const response = await axios.get(`http://localhost:5000/nilai/siswa/${mapelId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const { tugas = [], ujian = [] } = response.data;
+        setNilaiTugas(tugas);
+        setNilaiUjian(ujian);
+      } catch (error) {
+        console.error('Gagal mengambil nilai:', error);
+      }
+    };
+
+    fetchNilai();
+  }, [mapelId]);
 
   return (
     <div className="container mt-4">
       <h2>Rekap Nilai</h2>
-      <p>Menampilkan nilai untuk mata pelajaran dengan kode: <strong>{kodeMapel}</strong></p>
+      <p>Menampilkan nilai untuk mata pelajaran ID: <strong>{mapelId}</strong></p>
 
       <div className="row mt-4">
         {/* Tabel Nilai Tugas */}
@@ -24,21 +50,24 @@ const RekapNilaiSiswa = () => {
                 </tr>
               </thead>
               <tbody>
-                {/* Baris kosong untuk backend isi nanti */}
-                {[...Array(10)].map((_, index) => (
-                  <tr key={index}>
-                    <td>{index + 1}</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                  </tr>
-                ))}
+                {nilaiTugas.length > 0 ? (
+                  nilaiTugas.map((item, index) => (
+                    <tr key={index}>
+                      <td>{index + 1}</td>
+                      <td>{item.judul}</td>
+                      <td>{item.tanggal_deadline}</td>
+                      <td>{item.nilai}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr><td colSpan="4" className="text-center">Belum ada nilai tugas</td></tr>
+                )}
               </tbody>
             </table>
           </div>
         </div>
 
-        {/* Tabel Nilai UTS/UAS */}
+        {/* Tabel Nilai Ujian */}
         <div className="col-md-5 mb-4">
           <div className="border p-3 rounded bg-white">
             <h6><strong>Nilai Uts/Uas</strong></h6>
@@ -46,19 +75,22 @@ const RekapNilaiSiswa = () => {
               <thead>
                 <tr style={{ backgroundColor: '#f2f2f2' }}>
                   <th>No</th>
-                  <th>Uts/Uas</th>
+                  <th>Kategori</th>
                   <th>Nilai</th>
                 </tr>
               </thead>
               <tbody>
-                {/* Baris kosong untuk backend isi nanti */}
-                {[...Array(4)].map((_, index) => (
-                  <tr key={index}>
-                    <td>{index + 1}</td>
-                    <td></td>
-                    <td></td>
-                  </tr>
-                ))}
+                {nilaiUjian.length > 0 ? (
+                  nilaiUjian.map((item, index) => (
+                    <tr key={index}>
+                      <td>{index + 1}</td>
+                      <td>{item.kategori}</td>
+                      <td>{item.nilai}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr><td colSpan="3" className="text-center">Belum ada nilai ujian</td></tr>
+                )}
               </tbody>
             </table>
           </div>
