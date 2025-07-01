@@ -13,6 +13,8 @@ import GuruMateri from './components/guru/GuruMateri';
 import GuruTugas from './components/guru/GuruTugas';
 import GuruJadwalMengajar from './components/guru/GuruJadwalMengajar';
 import GuruPengaturan from './components/guru/GuruPengaturan';
+import BuatTugasBaru from './components/guru/buattugasbaru';
+import Pengumpulan from './components/guru/pengumpulan';
 
 // Layout siswa
 import MainLayout from './components/MainLayout';
@@ -82,17 +84,20 @@ function App() {
           <Route index element={<Navigate to="dashboard" />} />
         </Route>
 
-        {/* === Guru Layout === */}
+       {/* === Guru Layout === */}
         <Route path="/guru" element={<MainLayout />}>
           <Route path="akademik" element={<GuruAkademik />} />
           <Route path="manajemenakademik/absensi" element={<GuruAbsensi />} />
           <Route path="manajemenakademik/penilaian" element={<GuruPenilaian />} />
           <Route path="materi&tugas/materi" element={<GuruMateri />} />
           <Route path="materi&tugas/tugas" element={<GuruTugas />} />
+          <Route path="materi&tugas/buattugasbaru" element={<BuatTugasBaru />} />
+          <Route path="materi&tugas/pengumpulan" element={<Pengumpulan />} />
           <Route path="jadwal" element={<GuruJadwalMengajar />} />
           <Route path="pengaturan" element={<GuruPengaturan />} />
           <Route index element={<Navigate to="akademik" />} />
         </Route>
+
 
         {/* Default redirect to login */}
         <Route path="*" element={<Navigate to="/login" />} />

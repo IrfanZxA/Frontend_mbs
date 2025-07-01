@@ -6,16 +6,17 @@ const Sidebar = ({ isOpen }) => {
   const location = useLocation();
 
   const currentPath = location.pathname;
-  const roleFromPath = currentPath.split('/')[1]; // contoh: '/admin/...' → 'admin'
+  const roleFromPath = currentPath.split('/')[1];
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isSiswaDropdownOpen, setIsSiswaDropdownOpen] = useState(false);
   const [isGuruDropdownOpen, setIsGuruDropdownOpen] = useState(false);
   const [isMateriDropdownOpen, setIsMateriDropdownOpen] = useState(false);
+  const [isTugasDropdownOpen, setIsTugasDropdownOpen] = useState(false);
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
-    setIsSiswaDropdownOpen(false); // Tutup siswa & guru saat menu utama toggle
+    setIsSiswaDropdownOpen(false);
     setIsGuruDropdownOpen(false);
   };
 
@@ -29,12 +30,15 @@ const Sidebar = ({ isOpen }) => {
     setIsGuruDropdownOpen(prev => !prev);
   };
 
-
   const toggleMateriDropdown = (e) => {
     e.stopPropagation();
-    setIsMateriDropdownOpen((prev) => !prev);
-    };
+    setIsMateriDropdownOpen(prev => !prev);
+  };
 
+  const toggleTugasDropdown = (e) => {
+    e.stopPropagation();
+    setIsTugasDropdownOpen(prev => !prev);
+  };
 
   const sidebarStyle = {
     width: '250px',
@@ -149,7 +153,13 @@ const Sidebar = ({ isOpen }) => {
               {isMateriDropdownOpen && (
                 <ul style={{ listStyle: 'none', paddingLeft: '20px' }}>
                   <li className="sidebar-subitem" onClick={() => navigate('/guru/materi&tugas/materi')}>Materi</li>
-                  <li className="sidebar-subitem" onClick={() => navigate('/guru/materi&tugas/tugas')}>Tugas</li>
+                  <li className="sidebar-subitem" onClick={toggleTugasDropdown}>Tugas</li>
+                  {isTugasDropdownOpen && (
+                    <ul style={{ listStyle: 'none', paddingLeft: '20px' }}>
+                      <li className="sidebar-subitem" onClick={() => navigate('/guru/materi&tugas/buattugasbaru')}>Buat Tugas Baru</li>
+                      <li className="sidebar-subitem" onClick={() => navigate('/guru/materi&tugas/pengumpulan')}>Pengumpulan</li>
+                    </ul>
+                  )}
                 </ul>
               )}
               <li className="sidebar-item" onClick={() => navigate('/guru/jadwal')}>Jadwal Mengajar</li>
