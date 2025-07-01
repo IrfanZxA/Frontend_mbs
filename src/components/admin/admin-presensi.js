@@ -5,12 +5,6 @@ import {
 } from 'recharts';
 
 const AdminPresensi = () => {
-  const kelasList = [
-    '7A', '7B', '7C', '7D',
-    '8A', '8B', '8C', '8D',
-    '9A', '9B', '9C', '9D'
-  ];
-
   const bulanList = [
     'Januari 2025', 'Februari 2025', 'Maret 2025', 'April 2025',
     'Mei 2025', 'Juni 2025', 'Juli 2025', 'Agustus 2025',
@@ -18,7 +12,17 @@ const AdminPresensi = () => {
   ];
 
   const grafikList = ['Chart', 'Diagram', 'Pie'];
-  const guruList = ['Ibu Anita', 'Pak Budi', 'Bu Sari'];
+
+  const [kelasList, setKelasList] = useState([]);
+  const [kelas, setKelas] = useState('');
+  const [bulan, setBulan] = useState('');
+  const [grafik, setGrafik] = useState('Chart');
+  const [guru, setGuru] = useState('');
+  const [rentang, setRentang] = useState('');
+  const [data, setData] = useState([]);
+  const [guruData, setGuruData] = useState([]);
+  const [guruList, setGuruList] = useState([]);
+  const [rentangList, setRentangList] = useState([]);
 
   const generateMonthlyRanges = () => {
     const monthNames = [
@@ -35,42 +39,93 @@ const AdminPresensi = () => {
     return ranges;
   };
 
-  const [kelas, setKelas] = useState('');
-  const [bulan, setBulan] = useState('');
-  const [grafik, setGrafik] = useState('Chart');
-  const [guru, setGuru] = useState('');
-  const [rentang, setRentang] = useState('');
-  const [data, setData] = useState([]);
-  const [guruData, setGuruData] = useState([]);
-  const [rentangList, setRentangList] = useState([]);
-
   useEffect(() => {
     setRentangList(generateMonthlyRanges());
   }, []);
 
   useEffect(() => {
-    const getDummyData = () => {
-      if (!kelas || !bulan) return [];
-      return Array.from({ length: 20 }, (_, i) => ({
-        tanggal: (i + 1).toString(),
-        hadir: 15 + (i % 3),
-        izin: i % 4 === 0 ? 1 : 0,
-        tidakHadir: i % 6 === 0 ? 1 : 0,
-      }));
+    const fetchKelas = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/kelas");
+        const data = await res.json();
+        setKelasList(data);
+      } catch (err) {
+        console.error("Gagal ambil kelas", err);
+      }
     };
-    setData(getDummyData());
+    fetchKelas();
+  }, []);
+
+  useEffect(() => {
+    const fetchGuruList = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/guru");
+        const data = await res.json();
+        setGuruList(data);
+      } catch (err) {
+        console.error("Gagal ambil list guru", err);
+      }
+    };
+    fetchGuruList();
+  }, []);
+
+  useEffect(() => {
+    const fetchRekapSiswa = async () => {
+      if (!kelas || !bulan) return;
+
+      const [namaBulan, tahun] = bulan.split(' ');
+      const bulanMap = {
+        Januari: '01', Februari: '02', Maret: '03', April: '04',
+        Mei: '05', Juni: '06', Juli: '07', Agustus: '08',
+        September: '09', Oktober: '10', November: '11', Desember: '12'
+      };
+      const bulanFormatted = `${tahun}-${bulanMap[namaBulan]}`;
+
+      try {
+        const res = await fetch(`http://localhost:5000/absensi/rekap-siswa?kelas_id=${kelas}&bulan=${bulanFormatted}`);
+        const json = await res.json();
+        const formatData = json.map(d => ({
+          tanggal: new Date(d.tanggal).getDate().toString(),
+          hadir: Number(d.hadir),
+          izin: Number(d.izin),
+          tidakHadir: Number(d.tidak_hadir),
+        }));
+        setData(formatData);
+      } catch (err) {
+        console.error("Gagal ambil rekap absensi siswa", err);
+      }
+    };
+
+    fetchRekapSiswa();
   }, [kelas, bulan]);
 
   useEffect(() => {
-    const getGuruData = () => {
-      if (!guru || !rentang) return [];
-      return [
-        { tanggal: '01/06/2025', status: 'Hadir' },
-        { tanggal: '02/06/2025', status: 'Izin (Sakit)' },
-        { tanggal: '03/06/2025', status: 'Hadir' },
-      ];
+    const fetchAbsensiGuru = async () => {
+      if (!guru || !rentang) return;
+
+      const [startText, endText] = rentang.split(' - ');
+      const formatDate = (str) => {
+        const [tanggal, bulanNama, tahun] = str.split(' ');
+        const bulanMap = {
+          Januari: '01', Februari: '02', Maret: '03', April: '04',
+          Mei: '05', Juni: '06', Juli: '07', Agustus: '08',
+          September: '09', Oktober: '10', November: '11', Desember: '12'
+        };
+        return `${tahun}-${bulanMap[bulanNama]}-${tanggal.padStart(2, '0')}`;
+      };
+      const start = formatDate(startText);
+      const end = formatDate(endText);
+
+      try {
+        const res = await fetch(`http://localhost:5000/absensi/guru?nama=${encodeURIComponent(guru)}&start=${start}&end=${end}`);
+        const data = await res.json();
+        setGuruData(data);
+      } catch (err) {
+        console.error("Gagal ambil data absensi guru", err);
+      }
     };
-    setGuruData(getGuruData());
+
+    fetchAbsensiGuru();
   }, [guru, rentang]);
 
   const renderChart = () => {
@@ -145,7 +200,9 @@ const AdminPresensi = () => {
           <h4>Grafik Kehadiran Siswa</h4>
           <select value={kelas} onChange={e => setKelas(e.target.value)} className="form-select mb-2">
             <option value="">Pilih Kelas</option>
-            {kelasList.map(k => <option key={k}>{k}</option>)}
+            {kelasList.map(k => (
+              <option key={k.id} value={k.id}>{k.nama_kelas}</option>
+            ))}
           </select>
           <select value={bulan} onChange={e => setBulan(e.target.value)} className="form-select mb-2">
             <option value="">Pilih Bulan</option>
@@ -170,7 +227,9 @@ const AdminPresensi = () => {
           <h4>Statistik Absensi Guru</h4>
           <select value={guru} onChange={e => setGuru(e.target.value)} className="form-select mb-2">
             <option value="">Pilih Guru</option>
-            {guruList.map(g => <option key={g}>{g}</option>)}
+            {guruList.map(g => (
+              <option key={g.id} value={g.nama_lengkap}>{g.nama_lengkap}</option>
+            ))}
           </select>
           <select value={rentang} onChange={e => setRentang(e.target.value)} className="form-select mb-2">
             <option value="">Pilih Rentang Waktu</option>
