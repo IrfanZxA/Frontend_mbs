@@ -13,6 +13,7 @@ const Sidebar = ({ isOpen }) => {
   const [isGuruDropdownOpen, setIsGuruDropdownOpen] = useState(false);
   const [isMateriDropdownOpen, setIsMateriDropdownOpen] = useState(false);
   const [isTugasDropdownOpen, setIsTugasDropdownOpen] = useState(false);
+  const [isJadwalDropdownOpen, setIsJadwalDropdownOpen] = useState(false);
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
@@ -38,6 +39,11 @@ const Sidebar = ({ isOpen }) => {
   const toggleTugasDropdown = (e) => {
     e.stopPropagation();
     setIsTugasDropdownOpen(prev => !prev);
+  };
+
+  const toggleJadwalDropdown = (e) => {
+    e.stopPropagation();
+    setIsJadwalDropdownOpen(prev => !prev);
   };
 
   const sidebarStyle = {
@@ -162,7 +168,13 @@ const Sidebar = ({ isOpen }) => {
                   )}
                 </ul>
               )}
-              <li className="sidebar-item" onClick={() => navigate('/guru/jadwal')}>Jadwal Mengajar</li>
+              <li className="sidebar-item" onClick={toggleJadwalDropdown}>Jadwal</li>
+              {isJadwalDropdownOpen && (
+                <ul style={{ listStyle: 'none', paddingLeft: '20px' }}>
+                  <li className="sidebar-subitem" onClick={() => navigate('/guru/jadwal/jadwalmengajar')}>Jadwal Mengajar</li>
+                  <li className="sidebar-subitem" onClick={() => navigate('/guru/jadwal/jadwalujian')}>Jadwal Ujian</li>
+                </ul>
+              )}
               <li className="sidebar-item" onClick={() => navigate('/guru/pengaturan')}>Pengaturan</li>
             </>
           )}

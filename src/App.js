@@ -15,6 +15,8 @@ import GuruJadwalMengajar from './components/guru/GuruJadwalMengajar';
 import GuruPengaturan from './components/guru/GuruPengaturan';
 import BuatTugasBaru from './components/guru/buattugasbaru';
 import Pengumpulan from './components/guru/pengumpulan';
+import JadwalMengajar from './components/guru/jadwalmengajar';
+import JadwalUjian from './components/guru/jadwalujian';
 
 // Layout siswa
 import MainLayout from './components/MainLayout';
@@ -84,19 +86,21 @@ function App() {
           <Route index element={<Navigate to="dashboard" />} />
         </Route>
 
-       {/* === Guru Layout === */}
-        <Route path="/guru" element={<MainLayout />}>
-          <Route path="akademik" element={<GuruAkademik />} />
-          <Route path="manajemenakademik/absensi" element={<GuruAbsensi />} />
-          <Route path="manajemenakademik/penilaian" element={<GuruPenilaian />} />
-          <Route path="materi&tugas/materi" element={<GuruMateri />} />
-          <Route path="materi&tugas/tugas" element={<GuruTugas />} />
-          <Route path="materi&tugas/buattugasbaru" element={<BuatTugasBaru />} />
-          <Route path="materi&tugas/pengumpulan" element={<Pengumpulan />} />
-          <Route path="jadwal" element={<GuruJadwalMengajar />} />
-          <Route path="pengaturan" element={<GuruPengaturan />} />
-          <Route index element={<Navigate to="akademik" />} />
-        </Route>
+          {/* === GURU Layout === */}
+       <Route path="/guru" element={<MainLayout />}>
+        <Route path="akademik" element={<GuruAkademik />} />
+        <Route path="manajemenakademik/absensi" element={<GuruAbsensi />} />
+        <Route path="manajemenakademik/penilaian" element={<GuruPenilaian />} />
+        <Route path="materi&tugas/materi" element={<GuruMateri />} />
+        <Route path="materi&tugas/tugas" element={<GuruTugas />} />
+        <Route path="materi&tugas/buattugasbaru" element={<BuatTugasBaru />} />
+        <Route path="materi&tugas/pengumpulan" element={<Pengumpulan />} />
+        <Route path="jadwal/jadwalmengajar" element={<JadwalMengajar />} />
+        <Route path="jadwal/jadwalujian" element={<JadwalUjian />} />
+        <Route path="pengaturan" element={<GuruPengaturan />} />
+        <Route index element={<Navigate to="akademik" />} />
+      </Route>
+
 
 
         {/* Default redirect to login */}
