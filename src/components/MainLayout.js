@@ -6,12 +6,30 @@ import Header from './header';
 
 const MainLayout = () => {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
-    const [profil, setProfil] = useState(null);
+  const [profil, setProfil] = useState(null);
+  const navigate = useNavigate();
+  const location = useLocation();
 
+  // ✅ Ambil role dan token dari localStorage
+  const token = localStorage.getItem('token');
+  const role = localStorage.getItem('role');
+
+  // ✅ Validasi akses halaman sesuai role
+  useEffect(() => {
+    const validRoles = ['admin', 'siswa', 'guru'];
+    const pathRole = location.pathname.split('/')[1]; // ex: /guru/materi-tugas => "guru"
+
+    // Kalau role ga cocok dengan path atau token kosong
+    if (!token || !validRoles.includes(role) || role !== pathRole) {
+      localStorage.clear();
+      navigate('/login');
+    }
+  }, [location.pathname, navigate, role, token]);
+
+  // ✅ Fetch profil pengguna sesuai role
   useEffect(() => {
     const fetchProfile = async () => {
-      const token = localStorage.getItem('token');
-      const role = localStorage.getItem('role');
+      if (!token || !role) return;
 
       try {
         const response = await fetch(`http://localhost:5000/${role}/profile`, {
@@ -20,31 +38,27 @@ const MainLayout = () => {
           },
         });
 
+        if (response.status === 401 || response.status === 403) {
+          localStorage.clear();
+          navigate('/login');
+          return;
+        }
+
         const data = await response.json();
         setProfil(data);
       } catch (error) {
-        console.error('Gagal mengambil profil:', error);
+        console.error('Gagal ambil profil:', error);
+        localStorage.clear();
+        navigate('/login');
       }
     };
 
     fetchProfile();
-  }, []);
-
-  const navigate = useNavigate();
-  const location = useLocation();
+  }, [role, token, navigate]);
 
   const toggleSidebar = () => {
     setSidebarOpen(!isSidebarOpen);
   };
-
-  useEffect(() => {
-    const pathRole = location.pathname.split('/')[1]; // ambil segmen pertama path: /admin/xxx → admin
-    const validRoles = ['admin', 'siswa', 'guru'];
-    
-    if (!validRoles.includes(pathRole)) {
-      navigate('/login');
-    }
-  }, [location.pathname, navigate]);
 
   return (
     <div>
@@ -58,7 +72,7 @@ const MainLayout = () => {
         <Header toggleSidebar={toggleSidebar} profil={profil} />
       </div>
 
-      {/* Konten Utama */}
+      {/* Konten */}
       <div
         style={{
           paddingLeft: isSidebarOpen ? '250px' : '0',

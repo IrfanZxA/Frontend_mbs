@@ -1,6 +1,17 @@
 import React from 'react';
 
 const Header = ({ toggleSidebar, profil }) => {
+  // Fungsi untuk ambil nama_lengkap sesuai struktur data
+  const getNamaLengkap = (profil) => {
+    if (!profil) return 'Profil';
+    if (profil.nama_lengkap) return profil.nama_lengkap;
+    if (profil.admin?.nama_lengkap) return profil.admin.nama_lengkap;
+    if (profil.guru?.nama_lengkap) return profil.guru.nama_lengkap;
+    if (profil.siswa?.nama_lengkap) return profil.siswa.nama_lengkap;
+    if (profil.orang_tua?.nama_lengkap) return profil.orang_tua.nama_lengkap;
+    return 'Profil';
+  };
+
   return (
     <header
       className="d-flex justify-content-between align-items-center px-4 py-2 shadow-sm"
@@ -11,11 +22,10 @@ const Header = ({ toggleSidebar, profil }) => {
         backgroundColor: '#fff',
         height: '55px',
         width: '100%',
-        
         flexShrink: 0,
       }}
     >
-      {/* Kiri: Tombol Hamburger dan Judul */}
+      {/* Kiri: Tombol Hamburger */}
       <div className="d-flex align-items-center">
         <button
           onClick={toggleSidebar}
@@ -33,7 +43,6 @@ const Header = ({ toggleSidebar, profil }) => {
         >
           &#9776;
         </button>
-        
       </div>
 
       {/* Tengah: Logo */}
@@ -51,8 +60,8 @@ const Header = ({ toggleSidebar, profil }) => {
           style={{ borderRadius: '50%' }}
         />
         <span className="fw-semibold">
-  {profil?.admin?.nama_lengkap || profil?.guru?.nama_lengkap || profil?.siswa?.nama_lengkap || 'Profil'}
-</span>
+          {getNamaLengkap(profil)}
+        </span>
       </div>
     </header>
   );

@@ -1,7 +1,49 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
 const JadwalUjian = () => {
   const [selectedKelas, setSelectedKelas] = useState('');
+  const [kelasList, setKelasList] = useState([]);
+  const [jadwalUjian, setJadwalUjian] = useState([]);
+
+  // Ambil daftar kelas dari backend
+  useEffect(() => {
+    const fetchKelas = async () => {
+      try {
+        const res = await axios.get('http://localhost:5000/kelas', {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+        setKelasList(res.data);
+      } catch (err) {
+        console.error('Gagal ambil data kelas:', err);
+      }
+    };
+
+    fetchKelas();
+  }, []);
+
+  // Ambil jadwal ujian berdasarkan kelas yang dipilih
+  useEffect(() => {
+    if (!selectedKelas) return;
+
+    const fetchJadwalUjian = async () => {
+      try {
+        const res = await axios.get(`http://localhost:5000/guru/jadwal-ujian/${selectedKelas}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+        setJadwalUjian(res.data);
+      } catch (err) {
+        console.error('Gagal ambil jadwal ujian:', err);
+        setJadwalUjian([]);
+      }
+    };
+
+    fetchJadwalUjian();
+  }, [selectedKelas]);
 
   return (
     <div style={{ padding: '2rem', fontFamily: 'Segoe UI, sans-serif' }}>
@@ -18,10 +60,11 @@ const JadwalUjian = () => {
             onChange={(e) => setSelectedKelas(e.target.value)}
           >
             <option value="">Pilih Kelas</option>
-            <option value="7A">7 A</option>
-            <option value="7B">7 B</option>
-            <option value="7C">7 C</option>
-            <option value="7D">7 D</option>
+            {kelasList.map((kelas) => (
+              <option key={kelas.id} value={kelas.id}>
+                {kelas.nama_kelas}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -37,17 +80,28 @@ const JadwalUjian = () => {
                 <th>Ket</th>
               </tr>
             </thead>
-            <tbody style={{ height: '200px' }}>
-              {/* 6 baris kosong seperti pada gambar */}
-              {[...Array(6)].map((_, idx) => (
-                <tr key={idx}>
-                  <td style={{ height: '40px' }}></td>
-                  <td></td>
-                  <td></td>
-                  <td></td>
-                  <td></td>
-                </tr>
-              ))}
+            <tbody>
+              {jadwalUjian.length === 0 ? (
+                [...Array(6)].map((_, idx) => (
+                  <tr key={idx}>
+                    <td style={{ height: '40px' }}></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                ))
+              ) : (
+                jadwalUjian.map((item, idx) => (
+                  <tr key={idx}>
+                    <td>{item.hari}</td>
+                    <td>{item.jam_mulai} - {item.jam_selesai}</td>
+                    <td>{item.nama_mapel}</td>
+                    <td>{item.pengawas}</td>
+                    <td>{item.keterangan || '-'}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

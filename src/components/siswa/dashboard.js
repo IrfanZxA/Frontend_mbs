@@ -38,7 +38,7 @@ const Dashboard = () => {
         });
 
         const data = await response.json();
-        setTugas(data);
+        setTugas(Array.isArray(data) ? data : data.data); // ⬅️ ambil .data jika perlu
       } catch (error) {
         console.error('Gagal mengambil data tugas:', error);
       }

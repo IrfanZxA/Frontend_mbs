@@ -80,7 +80,7 @@ function App() {
           <Route path="penilaian/:mapelId" element={<RekapNilaiSiswa />} />
           <Route path="presensi" element={<DashboardPresensi />} />
           <Route path="bahasa-indonesia" element={<BahasaIndonesia />} />
-          <Route path="materi/:id" element={<DetailMateri />} />
+          <Route path="materi/:kode_mapel" element={<DetailMateri />} />
           <Route path="tugas/:id" element={<DetailTugas />} />
           <Route path="tugas" element={<DashboardTugas />} />
           <Route index element={<Navigate to="dashboard" />} />

@@ -1,22 +1,83 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 
 const JadwalMengajar = () => {
-  const [selectedKelas, setSelectedKelas] = useState('7C');
-  const [currentDayIndex, setCurrentDayIndex] = useState(3); // Default Kamis
-
   const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
+  const today = new Date();
+  const currentDayName = days[today.getDay() - 1]; // 0 = Minggu
 
-  const jadwalData = [
-    ['07.00 - 09.00', { Selasa: '7 A', Jumat: '7 B', Kamis: '7 A' }],
-    ['10.00 - 12.00', { Kamis: '7 D' }],
-    ['13.00 - 14.00', { Rabu: '7 C' }],
-  ];
-
-  const navigateDay = (dir) => {
-    setCurrentDayIndex((prev) =>
-      dir === 'prev' ? (prev - 1 + days.length) % days.length : (prev + 1) % days.length
-    );
+  const mapelColors = {
+    Matematika: '#e1f5fe',
+    IPA: '#f1f8e9',
+    Bahasa: '#fce4ec',
+    PKN: '#fff3e0',
+    Agama: '#ede7f6',
+    Olahraga: '#e0f2f1',
   };
+
+  const [jadwalData, setJadwalData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Ambil data jadwal dari backend
+  useEffect(() => {
+    const fetchJadwal = async () => {
+      try {
+        const token = localStorage.getItem('token'); // pastikan token ada
+        const res = await axios.get('http://localhost:5000/guru/jadwal', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = res.data;
+
+        // Transformasi data ke bentuk: { waktu: '07.00 - 09.00', { Senin: { kelas, mapel } } }
+        const jamUnik = [...new Set(data.map(j => `${j.jam_mulai} - ${j.jam_selesai}`))];
+        const mapJadwal = jamUnik.map(jam => {
+          const entry = {};
+          entry.waktu = jam;
+
+          days.forEach(day => {
+            const found = data.find(
+              j => `${j.jam_mulai} - ${j.jam_selesai}` === jam && j.hari === day
+            );
+            if (found) {
+              entry[day] = {
+                kelas: found.nama_kelas,
+                mapel: found.nama_mapel,
+              };
+            }
+          });
+
+          return entry;
+        });
+
+        setJadwalData(mapJadwal);
+      } catch (err) {
+        console.error('Gagal mengambil jadwal:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchJadwal();
+  }, []);
+
+  // Hitung total jam
+  const totalJam = jadwalData.reduce((total, row) => {
+    days.forEach(day => {
+      if (row[day]) total += 1;
+    });
+    return total;
+  }, 0) * 1.5; // misalnya tiap slot 1.5 jam
+
+  // Jadwal hari ini
+  const jadwalHariIni = jadwalData
+    .map(row => ({
+      waktu: row.waktu,
+      data: row[currentDayName]
+    }))
+    .filter(item => item.data);
 
   return (
     <div style={{ padding: '2rem', fontFamily: 'Segoe UI, sans-serif' }}>
@@ -25,71 +86,73 @@ const JadwalMengajar = () => {
         <h3 className="mb-1">Jadwal Mengajar</h3>
         <p style={{ fontSize: '14px', color: '#555' }}>Informasi Jadwal Mengajar & Kelas</p>
 
-        {/* Dropdown Kelas */}
-        <div className="mb-3 mt-3" style={{ maxWidth: '250px' }}>
-          <label>Kelas</label>
-          <select
-            className="form-select"
-            value={selectedKelas}
-            onChange={(e) => setSelectedKelas(e.target.value)}
-          >
-            <option value="7A">7 A</option>
-            <option value="7B">7 B</option>
-            <option value="7C">7 C</option>
-            <option value="7D">7 D</option>
-          </select>
+        {/* 🔔 Jadwal Hari Ini */}
+        <div className="alert alert-info mt-3" role="alert">
+          <strong>Jadwal Hari Ini ({currentDayName}):</strong>
+          {jadwalHariIni.length > 0 ? (
+            <ul className="mb-0">
+              {jadwalHariIni.map((item, i) => (
+                <li key={i}>
+                  {item.waktu} - Kelas {item.data.kelas} ({item.data.mapel})
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="mt-1">Tidak ada jadwal hari ini.</div>
+          )}
         </div>
 
-        {/* Navigasi Hari */}
-        <div
-          className="d-flex align-items-center justify-content-between p-2 border rounded mb-4"
-          style={{ backgroundColor: '#ADD8E6' }}
-        >
-          <button className="btn btn-light border" onClick={() => navigateDay('prev')}>
-            &lt;
-          </button>
-          <div className="text-center" style={{ flex: 1 }}>
-            <strong>{days[currentDayIndex]}</strong>
-            <div style={{ fontSize: '12px', color: '#555' }}>
-              07.00 - 09.00 &nbsp; | &nbsp; R - 7A
-            </div>
-          </div>
-          <button className="btn btn-light border" onClick={() => navigateDay('next')}>
-            &gt;
-          </button>
-        </div>
-
-        {/* Jadwal Table Box */}
-        <div className="p-3 border rounded shadow-sm" style={{ background: '#fff' }}>
-          <table className="table table-bordered text-center mb-0">
-            <thead className="table-light">
-              <tr>
-                <th>Waktu</th>
-                {days.map((day) => (
-                  <th key={day}>{day}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {jadwalData.map(([waktu, mapHari], idx) => (
-                <tr key={idx}>
-                  <td>{waktu}</td>
+        {/* 📊 Tabel Jadwal */}
+        <div className="p-3 border rounded shadow-sm mt-4" style={{ background: '#fff' }}>
+          {loading ? (
+            <p>Memuat jadwal...</p>
+          ) : (
+            <table className="table table-bordered text-center mb-0">
+              <thead className="table-light">
+                <tr>
+                  <th>Waktu</th>
                   {days.map((day) => (
-                    <td key={day}>
-                      {mapHari[day] && (
-                        <>
-                          <strong>{mapHari[day]}</strong>
-                          <div style={{ fontSize: '12px', color: '#666' }}>
-                            R - {mapHari[day]}
-                          </div>
-                        </>
-                      )}
-                    </td>
+                    <th key={day}>{day}</th>
                   ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {jadwalData.map((row, idx) => (
+                  <tr key={idx}>
+                    <td>{row.waktu}</td>
+                    {days.map((day) => {
+                      const cell = row[day];
+                      const isToday = day === currentDayName;
+                      const bgColor = cell?.mapel ? mapelColors[cell.mapel] || '#f0f0f0' : 'transparent';
+
+                      return (
+                        <td
+                          key={day}
+                          style={{
+                            backgroundColor: isToday ? '#c8e6c9' : bgColor,
+                            fontSize: '14px',
+                            verticalAlign: 'middle'
+                          }}
+                        >
+                          {cell && (
+                            <>
+                              <strong>{cell.kelas}</strong>
+                              <div style={{ fontSize: '12px', color: '#555' }}>{cell.mapel}</div>
+                            </>
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        {/* 🕓 Total Jam */}
+        <div className="mt-3" style={{ fontSize: '14px', color: '#444' }}>
+          Total Jam Mengajar Minggu Ini: <strong>{totalJam} jam</strong>
         </div>
       </div>
     </div>

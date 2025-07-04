@@ -25,7 +25,7 @@ const GuruAkademik = () => {
   const chartOptions = {
     responsive: true,
     plugins: {
-      legend: {
+      legend: { 
         display: false,
       },
     },

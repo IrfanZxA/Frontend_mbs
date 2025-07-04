@@ -1,58 +1,94 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
 const DashboardPresensi = () => {
-  const [selectedClass, setSelectedClass] = useState('');
-  const [selectedSemester, setSelectedSemester] = useState('');
   const [currentMonthIndex, setCurrentMonthIndex] = useState(6); // Juli
   const [showPopup, setShowPopup] = useState(false);
+  const [presensiData, setPresensiData] = useState([]);
+  const [tanggalMulai, setTanggalMulai] = useState('');
+  const [tanggalSelesai, setTanggalSelesai] = useState('');
+  const [keterangan, setKeterangan] = useState('');
+  const [suratFile, setSuratFile] = useState(null);
+
 
   const months = [
     'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
     'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
   ];
 
+  useEffect(() => {
+    const fetchPresensi = async () => {
+      try {
+        const bulan = currentMonthIndex + 1;
+        const res = await axios.get(`http://localhost:5000/siswa/presensi?bulan=${bulan}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+        setPresensiData(res.data);
+      } catch (error) {
+        console.error('Gagal ambil data presensi:', error);
+      }
+    };
+
+    fetchPresensi();
+  }, [currentMonthIndex]);
+
   const handlePrevMonth = () => {
-    if (currentMonthIndex > 0) {
-      setCurrentMonthIndex(currentMonthIndex - 1);
-    }
+    if (currentMonthIndex > 0) setCurrentMonthIndex(currentMonthIndex - 1);
   };
 
   const handleNextMonth = () => {
-    if (currentMonthIndex < months.length - 1) {
-      setCurrentMonthIndex(currentMonthIndex + 1);
-    }
+    if (currentMonthIndex < months.length - 1) setCurrentMonthIndex(currentMonthIndex + 1);
   };
+
+  const handleKirimIzin = async () => {
+  if (!tanggalMulai || !tanggalSelesai || !keterangan) {
+    alert("Lengkapi semua data izin terlebih dahulu!");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("tanggal_mulai", tanggalMulai);
+  formData.append("tanggal_selesai", tanggalSelesai);
+  formData.append("keterangan", keterangan);
+  if (suratFile) {
+    formData.append("file", suratFile);
+  }
+
+  try {
+    await axios.post("http://localhost:5000/siswa/ajukan-izin", formData, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    alert("Pengajuan izin berhasil dikirim!");
+    // Reset dan tutup popup
+    setTanggalMulai('');
+    setTanggalSelesai('');
+    setKeterangan('');
+    setSuratFile(null);
+    setShowPopup(false);
+  } catch (error) {
+    console.error("Gagal kirim izin:", error);
+    alert("Gagal mengirim pengajuan izin!");
+  }
+};
 
   return (
     <div style={{ padding: '2rem', fontFamily: 'Segoe UI, sans-serif' }}>
       <h2 style={{ color: '#2471AE' }}>Selamat Datang di Halaman Presensi</h2>
-      <p>Di sini kamu dapat melihat kehadiran harianmu. Fitur presensi akan ditampilkan di sini.</p>
+      <p>Di sini kamu dapat melihat kehadiran harianmu.</p>
 
-      {/* Dropdown & Tombol */}
+      {/* Semester & Ajukan Izin */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <select
-            value={selectedClass}
-            onChange={(e) => setSelectedClass(e.target.value)}
-            style={{ padding: '6px' }}
-          >
-            <option value="">Pilih Kelas</option>
-            {['7A', '7B', '7C', '7D', '8A', '8B', '8C', '8D', '9A', '9B', '9C', '9D'].map((kelas) => (
-              <option key={kelas} value={kelas}>{kelas}</option>
-            ))}
-          </select>
-
-          <select
-            value={selectedSemester}
-            onChange={(e) => setSelectedSemester(e.target.value)}
-            style={{ padding: '6px' }}
-          >
-            <option value="">Pilih Semester</option>
-            <option value="semester1">Semester 1</option>
-            <option value="semester2">Semester 2</option>
-          </select>
-        </div>
-
+        <p style={{ fontSize: '14px', color: '#666', margin: 0 }}>
+          {currentMonthIndex >= 6
+            ? '📘 Semester 1 (Juli – Desember)'
+            : '📙 Semester 2 (Januari – Juni)'}
+        </p>
         <button
           onClick={() => setShowPopup(true)}
           style={{ padding: '6px 12px', background: 'white', border: '1px solid #ccc', cursor: 'pointer', fontWeight: 'normal' }}
@@ -62,29 +98,21 @@ const DashboardPresensi = () => {
       </div>
 
       {/* Navigasi Bulan */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          fontWeight: 'bold',
-          marginBottom: '10px',
-        }}
-      >
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: 'bold', marginBottom: '10px' }}>
         <button
           onClick={handlePrevMonth}
           disabled={currentMonthIndex === 0}
-          style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', paddingRight: '16px' }}
+          style={{ background: 'none', border: 'none', fontSize: '22px', cursor: 'pointer', paddingRight: '16px' }}
         >
-          &#8249;
+          ◀
         </button>
-        <span style={{ minWidth: '80px', textAlign: 'center' }}>{months[currentMonthIndex]}</span>
+        <span style={{ minWidth: '120px', textAlign: 'center', fontSize: '16px' }}>{months[currentMonthIndex]}</span>
         <button
           onClick={handleNextMonth}
           disabled={currentMonthIndex === months.length - 1}
-          style={{ background: 'none', border: 'none', fontSize: '18px', cursor: 'pointer', paddingLeft: '16px' }}
+          style={{ background: 'none', border: 'none', fontSize: '22px', cursor: 'pointer', paddingLeft: '16px' }}
         >
-          &#8250;
+          ▶
         </button>
       </div>
 
@@ -101,50 +129,81 @@ const DashboardPresensi = () => {
             </tr>
           </thead>
           <tbody>
-            {[...Array(7)].map((_, i) => (
-              <tr key={i}>
-                <td style={cellStyle}>{i + 1}</td>
-                <td style={cellStyle}></td>
-                <td style={cellStyle}></td>
-                <td style={cellStyle}></td>
-                <td style={cellStyle}></td>
-              </tr>
-            ))}
+            {presensiData.length > 0 ? (
+              presensiData.map((item, index) => {
+                const tanggal = new Date(item.tanggal).toLocaleDateString('id-ID');
+                return (
+                  <tr key={index}>
+                    <td style={cellStyle}>{index + 1}</td>
+                    <td style={cellStyle}>{tanggal}</td>
+                    <td style={cellStyle}>{item.status === 'Hadir' ? '✔️' : ''}</td>
+                    <td style={cellStyle}>{item.status === 'Izin' ? '✔️' : ''}</td>
+                    <td style={cellStyle}>{item.status === 'Alpha' ? '✔️' : ''}</td>
+                  </tr>
+                );
+              })
+            ) : (
+              <tr><td colSpan="5" style={cellStyle}>Tidak ada data presensi</td></tr>
+            )}
           </tbody>
         </table>
       </div>
 
-      {/* Popup */}
+      {/* Popup Ajukan Izin */}
       {showPopup && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          zIndex: 1000
+          backgroundColor: 'rgba(0, 0, 0, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
         }}>
           <div style={{
-            width: '500px',
-            background: 'white',
-            padding: '20px 30px 10px 30px',
-            borderRadius: '8px', position: 'relative',
-            boxShadow: '0 0 10px rgba(0,0,0,0.2)', fontFamily: 'Segoe UI, sans-serif'
+            width: '500px', background: 'white', padding: '20px 30px 10px 30px',
+            borderRadius: '8px', position: 'relative', boxShadow: '0 0 10px rgba(0,0,0,0.2)', fontFamily: 'Segoe UI, sans-serif'
           }}>
             <div style={{ textAlign: 'center', marginBottom: '15px' }}>
               <h5>Ajukan Izin</h5>
             </div>
-            <label>Tanggal Mulai</label>
-            <input type="date" style={inputStyle} />
-            <label>Tanggal Selesai</label>
-            <input type="text" placeholder="Tanggal Selesai" style={inputStyle} />
-            <label>Keterangan Izin</label>
-            <input type="text" placeholder="Keterangan Izin" style={inputStyle} />
-            <div style={{ marginTop: '10px' }}>
-              <label><strong>Upload Surat Izin</strong></label><br />
-              <input type="file" style={{ marginTop: '5px' }} />
-              <p style={{ fontSize: '12px', color: '#666' }}>Jika ada surat izin</p>
-            </div>
+<label>Tanggal Mulai</label>
+<input
+  type="date"
+  value={tanggalMulai}
+  onChange={(e) => setTanggalMulai(e.target.value)}
+  style={inputStyle}
+/>
+
+<label>Tanggal Selesai</label>
+<input
+  type="date"
+  value={tanggalSelesai}
+  onChange={(e) => setTanggalSelesai(e.target.value)}
+  style={inputStyle}
+/>
+
+<label>Keterangan Izin</label>
+<input
+  type="text"
+  value={keterangan}
+  onChange={(e) => setKeterangan(e.target.value)}
+  placeholder="Keterangan Izin"
+  style={inputStyle}
+/>
+
+<div style={{ marginTop: '10px' }}>
+  <label><strong>Upload Surat Izin</strong></label><br />
+  <input
+    type="file"
+    onChange={(e) => setSuratFile(e.target.files[0])}
+    style={{ marginTop: '5px' }}
+  />
+  <p style={{ fontSize: '12px', color: '#666' }}>Jika ada surat izin</p>
+</div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px', gap: '10px' }}>
-              <button onClick={() => setShowPopup(false)} style={{ padding: '6px 16px', border: '1px solid #000', background: 'white', cursor: 'pointer' }}>Batal</button>
-              <button style={{ padding: '6px 16px', border: '1px solid #007bff', background: '#007bff', color: 'white', cursor: 'pointer' }}>Kirim</button>
+              <button
+  onClick={handleKirimIzin}
+  style={{ padding: '6px 16px', border: '1px solid #007bff', background: '#007bff', color: 'white', cursor: 'pointer' }}
+>
+  Kirim
+</button>
+
             </div>
           </div>
         </div>

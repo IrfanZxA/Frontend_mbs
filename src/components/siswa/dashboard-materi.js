@@ -1,40 +1,61 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 
 const DashboardMateri = () => {
-  const initialSubjects = [
-    { no: 1, name: 'Bahasa Indonesia', code: 'A1' },
-    { no: 2, name: 'Bahasa Inggris', code: 'A2' },
-    { no: 3, name: 'Agama', code: 'A3' },
-    { no: 4, name: 'Matematika', code: 'A4' },
-    { no: 5, name: 'Prakarya', code: 'A5' },
-    { no: 6, name: 'Olahraga', code: 'A6' },
-    { no: 7, name: 'PPKN', code: 'A7' },
-    { no: 8, name: 'TIK', code: 'A8' },
-    { no: 9, name: 'Biologi', code: 'A9' },
-    { no: 10, name: 'Fisika', code: 'A10' },
-    { no: 11, name: 'Kimia', code: 'A11' },
-    { no: 12, name: 'Seni Budaya', code: 'A12' },
-    { no: 13, name: 'Sejarah', code: 'A13' },
-    { no: 14, name: 'Akidah akhlak', code: 'A14' },
-  ];
-
-  const [subjects, setSubjects] = useState(initialSubjects);
+  const [subjects, setSubjects] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showEntries, setShowEntries] = useState('14');
+
+  useEffect(() => {
+    const fetchMateri = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await axios.get('http://localhost:5000/siswa/materi', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        // 🔄 Kelompokkan berdasarkan nama_mapel + kode_mapel
+        const mapelMap = new Map();
+
+        res.data.forEach((materi) => {
+          const key = `${materi.nama_mapel}#${materi.kode_mapel}`;
+          if (!mapelMap.has(key)) {
+            mapelMap.set(key, {
+              name: materi.nama_mapel,
+              code: materi.kode_mapel,
+            });
+          }
+        });
+
+        // 🚀 Ubah ke array seperti initialSubjects
+        const groupedSubjects = Array.from(mapelMap.values()).map((mapel, index) => ({
+          no: index + 1,
+          name: mapel.name,
+          code: mapel.code,
+        }));
+
+        setSubjects(groupedSubjects);
+      } catch (err) {
+        console.error('Gagal ambil materi:', err);
+      }
+    };
+
+    fetchMateri();
+  }, []);
 
   const handleSearch = (e) => {
     const value = e.target.value;
     setSearchTerm(value);
 
     if (value === '') {
-      setSubjects(initialSubjects);
+      setSubjects((prev) => [...prev]); // tetap pakai yang udah ada
     } else {
-      const filteredSubjects = initialSubjects.filter(subject =>
+      const filtered = subjects.filter((subject) =>
         subject.name.toLowerCase().includes(value.toLowerCase()) ||
         subject.code.toLowerCase().includes(value.toLowerCase())
       );
-      setSubjects(filteredSubjects);
+      setSubjects(filtered);
     }
   };
 
@@ -69,7 +90,7 @@ const DashboardMateri = () => {
             id="showEntries"
             type="number"
             min="1"
-            max={initialSubjects.length}
+            max={subjects.length}
             value={showEntries}
             onChange={handleShowEntriesChange}
             className="border border-gray-300 rounded px-2 w-16 h-8 text-center"
@@ -159,16 +180,12 @@ const DashboardMateri = () => {
                       borderRight: '2px solid white',
                     }}
                   >
-                    {subject.name === 'Bahasa Indonesia' ? (
-                      <Link
-                        to="/siswa/bahasa-indonesia"
-                        style={{ color: 'black', textDecoration: 'none' }}
-                      >
-                        {subject.name}
-                      </Link>
-                    ) : (
-                      subject.name
-                    )}
+                    <Link
+                      to={`/siswa/materi/${subject.code}`}
+                      style={{ color: 'black', textDecoration: 'none' }}
+                    >
+                      {subject.name}
+                    </Link>
                   </td>
                   <td
                     className="py-2 px-4 text-center"
