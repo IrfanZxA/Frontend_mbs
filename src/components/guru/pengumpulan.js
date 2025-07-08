@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useSearchParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 const Pengumpulan = () => {
-  const [searchParams] = useSearchParams();
-  const tugasId = searchParams.get("tugasId");
+  const { tugasId } = useParams();
+  console.log("Tugas ID dari URL:", tugasId);
 
   const [pengumpulan, setPengumpulan] = useState([]);
   const [kelasList, setKelasList] = useState([]);
@@ -13,7 +13,7 @@ const Pengumpulan = () => {
   const [filterKelas, setFilterKelas] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
 
-  // Ambil data kelas
+  // Ambil data kelas untuk dropdown
   useEffect(() => {
     const fetchKelas = async () => {
       try {
@@ -43,9 +43,14 @@ const Pengumpulan = () => {
             },
           }
         );
+        console.log("Data pengumpulan dari backend:", res.data);
         setPengumpulan(res.data);
       } catch (err) {
         console.error('Gagal fetch pengumpulan', err);
+        if (err.response) {
+          console.log("Status:", err.response.status);
+          console.log("Data:", err.response.data);
+        }
       }
     };
 
@@ -60,6 +65,11 @@ const Pengumpulan = () => {
       (filterStatus === 'belum' && !item.file_url);
     return matchJudul && matchKelas && matchStatus;
   });
+
+  // 🔍 Debug log
+  useEffect(() => {
+    console.log("Filtered data:", filteredData);
+  }, [filteredData]);
 
   return (
     <div style={{ padding: '2rem', fontFamily: 'Segoe UI, sans-serif' }}>
@@ -117,7 +127,7 @@ const Pengumpulan = () => {
         </button>
       </div>
 
-      {/* Tabel */}
+      {/* Tabel Pengumpulan */}
       <table className="table table-bordered table-sm">
         <thead>
           <tr>

@@ -1,7 +1,14 @@
 import React, { useState, useEffect } from 'react';
 
 const DashboardKelas = () => {
-  const [currentDay, setCurrentDay] = useState('SENIN');
+  const getHariIni = () => {
+    const hariIndex = new Date().getDay(); // 0 = Minggu, 1 = Senin, ...
+    const namaHari = ['MINGGU', 'SENIN', 'SELASA', 'RABU', 'KAMIS', 'JUMAT', 'SABTU'];
+    const hari = namaHari[hariIndex];
+    return ['SENIN', 'SELASA', 'RABU', 'KAMIS', 'JUMAT'].includes(hari) ? hari : 'SENIN';
+  };
+
+  const [currentDay, setCurrentDay] = useState(getHariIni());
   const [jadwalMingguan, setJadwalMingguan] = useState({});
   const [dailySchedule, setDailySchedule] = useState([]);
 
@@ -15,21 +22,17 @@ const DashboardKelas = () => {
 
       const grouped = {};
       data.forEach(item => {
-        const hari = item.hari.trim().toUpperCase(); // tambahkan trim()
+        const hari = item.hari.trim().toUpperCase();
         if (!grouped[hari]) grouped[hari] = [];
         grouped[hari].push({
           nama_mapel: item.nama_mapel,
-          teacher: item.nama_guru, // ✅ gunakan teacher
-          time: `${item.jam_mulai.slice(0, 5)} - ${item.jam_selesai.slice(0, 5)}`, // ✅ pakai 'time'
+          teacher: item.nama_guru,
+          time: `${item.jam_mulai.slice(0, 5)} - ${item.jam_selesai.slice(0, 5)}`,
           room: 'R-7A',
         });
       });
 
       setJadwalMingguan(grouped);
-      console.log("📅 HARI DALAM GROUPED:", Object.keys(grouped));
-Object.keys(grouped).forEach(hari => {
-  console.log(`📌 Hari Key Asli: '${hari}' | Panjang: ${hari.length}`);
-});
     };
 
     fetchJadwalMingguan();
@@ -37,9 +40,6 @@ Object.keys(grouped).forEach(hari => {
 
   useEffect(() => {
     setDailySchedule(jadwalMingguan[currentDay] || []);
-    console.log("📚 Jadwal Mingguan:", jadwalMingguan);
-    console.log("📅 Hari sekarang:", currentDay);
-    console.log("📆 Jadwal Hari Ini:", jadwalMingguan[currentDay]);
   }, [currentDay, jadwalMingguan]);
 
   const handlePrevDay = () => {

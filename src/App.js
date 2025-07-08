@@ -97,7 +97,7 @@ function App() {
         <Route path="materi&tugas/pengumpulan" element={<Pengumpulan />} />
         <Route path="jadwal/jadwalmengajar" element={<JadwalMengajar />} />
         <Route path="jadwal/jadwalujian" element={<JadwalUjian />} />
-        <Route path="pengaturan" element={<GuruPengaturan />} />
+        <Route path="pengaturan" element={<GuruPengaturan />} />  
         <Route index element={<Navigate to="akademik" />} />
       </Route>
 

@@ -10,7 +10,6 @@ const DashboardPresensi = () => {
   const [keterangan, setKeterangan] = useState('');
   const [suratFile, setSuratFile] = useState(null);
 
-
   const months = [
     'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
     'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
@@ -34,6 +33,19 @@ const DashboardPresensi = () => {
     fetchPresensi();
   }, [currentMonthIndex]);
 
+  // Lock scroll saat popup terbuka
+  useEffect(() => {
+    if (showPopup) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [showPopup]);
+
   const handlePrevMonth = () => {
     if (currentMonthIndex > 0) setCurrentMonthIndex(currentMonthIndex - 1);
   };
@@ -43,39 +55,39 @@ const DashboardPresensi = () => {
   };
 
   const handleKirimIzin = async () => {
-  if (!tanggalMulai || !tanggalSelesai || !keterangan) {
-    alert("Lengkapi semua data izin terlebih dahulu!");
-    return;
-  }
+    if (!tanggalMulai || !tanggalSelesai || !keterangan) {
+      alert("Lengkapi semua data izin terlebih dahulu!");
+      return;
+    }
 
-  const formData = new FormData();
-  formData.append("tanggal_mulai", tanggalMulai);
-  formData.append("tanggal_selesai", tanggalSelesai);
-  formData.append("keterangan", keterangan);
-  if (suratFile) {
-    formData.append("file", suratFile);
-  }
+    const formData = new FormData();
+    formData.append("tanggal_mulai", tanggalMulai);
+    formData.append("tanggal_selesai", tanggalSelesai);
+    formData.append("keterangan", keterangan);
+    if (suratFile) {
+      formData.append("file", suratFile);
+    }
 
-  try {
-    await axios.post("http://localhost:5000/siswa/ajukan-izin", formData, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-        "Content-Type": "multipart/form-data",
-      },
-    });
+    try {
+      await axios.post("http://localhost:5000/siswa/ajukan-izin", formData, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
-    alert("Pengajuan izin berhasil dikirim!");
-    // Reset dan tutup popup
-    setTanggalMulai('');
-    setTanggalSelesai('');
-    setKeterangan('');
-    setSuratFile(null);
-    setShowPopup(false);
-  } catch (error) {
-    console.error("Gagal kirim izin:", error);
-    alert("Gagal mengirim pengajuan izin!");
-  }
-};
+      alert("Pengajuan izin berhasil dikirim!");
+      // Reset dan tutup popup
+      setTanggalMulai('');
+      setTanggalSelesai('');
+      setKeterangan('');
+      setSuratFile(null);
+      setShowPopup(false);
+    } catch (error) {
+      console.error("Gagal kirim izin:", error);
+      alert("Gagal mengirim pengajuan izin!");
+    }
+  };
 
   return (
     <div style={{ padding: '2rem', fontFamily: 'Segoe UI, sans-serif' }}>
@@ -153,57 +165,75 @@ const DashboardPresensi = () => {
       {showPopup && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
+          backgroundColor: 'rgba(0, 0, 0, 0.3)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 1000, overscrollBehavior: 'contain'
         }}>
           <div style={{
-            width: '500px', background: 'white', padding: '20px 30px 10px 30px',
-            borderRadius: '8px', position: 'relative', boxShadow: '0 0 10px rgba(0,0,0,0.2)', fontFamily: 'Segoe UI, sans-serif'
+            width: '90%', maxWidth: '500px', maxHeight: '90vh',
+            overflowY: 'auto', background: 'white', padding: '20px 30px 10px 30px',
+            borderRadius: '8px', position: 'relative',
+            boxShadow: '0 0 10px rgba(0,0,0,0.2)', fontFamily: 'Segoe UI, sans-serif'
           }}>
+            {/* Tombol Close */}
+            <button
+              onClick={() => setShowPopup(false)}
+              style={{
+                position: 'absolute', top: '10px', right: '15px',
+                background: 'none', border: 'none', fontSize: '18px',
+                cursor: 'pointer', color: '#999'
+              }}
+              title="Tutup"
+            >
+              ❌
+            </button>
+
             <div style={{ textAlign: 'center', marginBottom: '15px' }}>
               <h5>Ajukan Izin</h5>
             </div>
-<label>Tanggal Mulai</label>
-<input
-  type="date"
-  value={tanggalMulai}
-  onChange={(e) => setTanggalMulai(e.target.value)}
-  style={inputStyle}
-/>
 
-<label>Tanggal Selesai</label>
-<input
-  type="date"
-  value={tanggalSelesai}
-  onChange={(e) => setTanggalSelesai(e.target.value)}
-  style={inputStyle}
-/>
+            <label>Tanggal Mulai</label>
+            <input
+              type="date"
+              value={tanggalMulai}
+              onChange={(e) => setTanggalMulai(e.target.value)}
+              style={inputStyle}
+            />
 
-<label>Keterangan Izin</label>
-<input
-  type="text"
-  value={keterangan}
-  onChange={(e) => setKeterangan(e.target.value)}
-  placeholder="Keterangan Izin"
-  style={inputStyle}
-/>
+            <label>Tanggal Selesai</label>
+            <input
+              type="date"
+              value={tanggalSelesai}
+              onChange={(e) => setTanggalSelesai(e.target.value)}
+              style={inputStyle}
+            />
 
-<div style={{ marginTop: '10px' }}>
-  <label><strong>Upload Surat Izin</strong></label><br />
-  <input
-    type="file"
-    onChange={(e) => setSuratFile(e.target.files[0])}
-    style={{ marginTop: '5px' }}
-  />
-  <p style={{ fontSize: '12px', color: '#666' }}>Jika ada surat izin</p>
-</div>
+            <label>Keterangan Izin</label>
+            <input
+              type="text"
+              value={keterangan}
+              onChange={(e) => setKeterangan(e.target.value)}
+              placeholder="Keterangan Izin"
+              style={inputStyle}
+            />
+
+            <div style={{ marginTop: '10px' }}>
+              <label><strong>Upload Surat Izin</strong></label><br />
+              <input
+                type="file"
+                onChange={(e) => setSuratFile(e.target.files[0])}
+                style={{ marginTop: '5px' }}
+              />
+              <p style={{ fontSize: '12px', color: '#666' }}>Jika ada surat izin</p>
+            </div>
+
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px', gap: '10px' }}>
               <button
-  onClick={handleKirimIzin}
-  style={{ padding: '6px 16px', border: '1px solid #007bff', background: '#007bff', color: 'white', cursor: 'pointer' }}
->
-  Kirim
-</button>
-
+                onClick={handleKirimIzin}
+                style={{ padding: '6px 16px', border: '1px solid #007bff', background: '#007bff', color: 'white', cursor: 'pointer' }}
+              >
+                Kirim
+              </button>
             </div>
           </div>
         </div>

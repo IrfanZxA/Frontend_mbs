@@ -130,8 +130,8 @@ const Sidebar = ({ isOpen }) => {
           {/* === SISWA === */}
           {roleFromPath === 'siswa' && (
             <>
-              <li className="sidebar-item" onClick={() => navigate('/siswa/dashboard')}>Akademik</li>
-              <li className="sidebar-item" onClick={toggleDropdown}>Manajemen Akademik</li>
+              <li className="sidebar-item" onClick={() => navigate('/siswa/dashboard')}>Home</li>
+              <li className="sidebar-item" onClick={toggleDropdown}>Akademik</li>
               {isDropdownOpen && (
                 <ul style={{ listStyle: 'none', paddingLeft: '20px' }}>
                   <li className="sidebar-subitem" onClick={() => navigate('/siswa/kelas')}>Kelas</li>

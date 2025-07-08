@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
-import DetailTugas from './DetailTugas';
+import DetailIsiMateri from './DetailIsiMateri';
 
 export default function DetailMateri() {
   const { kode_mapel } = useParams();
   const [materiList, setMateriList] = useState([]);
   const [namaMapel, setNamaMapel] = useState('');
   const [loading, setLoading] = useState(true);
-  const [selectedMateriId, setSelectedMateriId] = useState(null);
+  const [selectedMateri, setSelectedMateri] = useState(null); // Bukan ID, tapi langsung objek
 
   useEffect(() => {
     const fetchMateri = async () => {
@@ -37,7 +37,6 @@ export default function DetailMateri() {
 
   return (
     <div style={{ padding: '20px', backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
-      {/* Container Box */}
       <div
         style={{
           backgroundColor: 'white',
@@ -64,28 +63,27 @@ export default function DetailMateri() {
           <img src="/images/logo-bukuwarna.png" alt="Books" style={{ height: '80px' }} />
         </div>
 
-        {/* List Materi */}
-        <div style={{ padding: '1.5rem' }}>
-          {materiList.length === 0 ? (
-            <p style={{ fontSize: '0.9rem', color: '#888' }}>
-              Belum ada materi untuk mapel ini.
-            </p>
-          ) : (
-            materiList.map((materi) => (
-              <div key={materi.id} style={{ marginBottom: '1.5rem' }}>
-                {/* Materi Item */}
+        {/* Kalau belum pilih materi, tampilkan daftar */}
+        {!selectedMateri ? (
+          <div style={{ padding: '1.5rem' }}>
+            {materiList.length === 0 ? (
+              <p style={{ fontSize: '0.9rem', color: '#888' }}>
+                Belum ada materi untuk mapel ini.
+              </p>
+            ) : (
+              materiList.map((materi) => (
                 <div
-                  onClick={() => setSelectedMateriId(materi.id)}
+                  key={materi.id}
+                  onClick={() => setSelectedMateri(materi)}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    marginBottom: '0.5rem',
+                    marginBottom: '1rem',
                     cursor: 'pointer',
-                    backgroundColor:
-                      selectedMateriId === materi.id ? '#eef6fb' : 'transparent',
+                    backgroundColor: '#f0f8ff',
                     padding: '10px',
                     borderRadius: '0.5rem',
-                    transition: 'background-color 0.2s',
+                    transition: '0.3s',
                   }}
                 >
                   <div
@@ -115,51 +113,12 @@ export default function DetailMateri() {
                     </p>
                   </div>
                 </div>
-
-                {/* Jika Dipilih, Tampilkan File + Tugas */}
-                {selectedMateriId === materi.id && (
-                  <div style={{ marginTop: '1rem', marginLeft: '2.5rem' }}>
-                    {materi.file_url && (
-                      <div
-                        style={{
-                          border: '1px solid #ddd',
-                          borderRadius: '0.75rem',
-                          padding: '1rem',
-                          textAlign: 'center',
-                          cursor: 'pointer',
-                          backgroundColor: 'white',
-                          marginBottom: '1rem',
-                        }}
-                        onClick={() =>
-                          window.open(
-                            `http://localhost:5000/${materi.file_url.replace(/\\/g, '/')}`,
-                            '_blank'
-                          )
-                        }
-                      >
-                        <img
-                          src="/images/logo-pdf.png"
-                          alt="PDF Logo"
-                          style={{
-                            width: '40px',
-                            height: '40px',
-                            marginBottom: '0.5rem',
-                          }}
-                        />
-                        <div style={{ fontSize: '0.875rem' }}>
-                          {materi.file_url.split('/').pop()}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Kalau nanti kamu punya data tugas dari backend: */}
-                    {/* <DetailTugas tugas={materi.tugas} /> */}
-                  </div>
-                )}
-              </div>
-            ))
-          )}
-        </div>
+              ))
+            )}
+          </div>
+        ) : (
+          <DetailIsiMateri materi={selectedMateri} onBack={() => setSelectedMateri(null)} />
+        )}
       </div>
     </div>
   );
