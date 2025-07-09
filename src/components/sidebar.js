@@ -116,14 +116,12 @@ const Sidebar = ({ isOpen }) => {
                     <ul style={{ listStyle: 'none', paddingLeft: '20px' }}>
                       <li className="sidebar-subitem" onClick={() => navigate('/admin/ManajemenAkademik/ManajemenGuru/TambahDataGuru')}>Tambah Data Guru</li>
                       <li className="sidebar-subitem" onClick={() => navigate('/admin/ManajemenAkademik/ManajemenGuru/EditJadwalGuru')}>Edit Jadwal Guru</li>
-                      <li className="sidebar-subitem" onClick={() => navigate('/admin/ManajemenAkademik/ManajemenGuru/HapusGuruKeluar')}>Hapus Guru Keluar</li>
                     </ul>
                   )}
                 </ul>
               )}
               <li className="sidebar-item" onClick={() => navigate('/admin/admin-penilaian')}>Penilaian</li>
               <li className="sidebar-item" onClick={() => navigate('/admin/admin-presensi')}>Presensi</li>
-              <li className="sidebar-item" onClick={() => navigate('/admin/admin-pengaturan')}>Pengaturan</li>
             </>
           )}
 
@@ -140,7 +138,6 @@ const Sidebar = ({ isOpen }) => {
               )}
               <li className="sidebar-item" onClick={() => navigate('/siswa/penilaian')}>Penilaian</li>
               <li className="sidebar-item" onClick={() => navigate('/siswa/presensi')}>Presensi</li>
-              <li className="sidebar-item" onClick={() => navigate('/siswa/pengaturan')}>Pengaturan</li>
             </>
           )}
 
@@ -191,7 +188,6 @@ const Sidebar = ({ isOpen }) => {
     )}
     <li className="sidebar-item" onClick={() => navigate('/orang-tua/penilaian')}>Penilaian</li>
     <li className="sidebar-item" onClick={() => navigate('/orang-tua/presensi')}>Presensi</li>
-    <li className="sidebar-item" onClick={() => navigate('/orang-tua/pengaturan')}>Pengaturan</li>
   </>
 )}
 
