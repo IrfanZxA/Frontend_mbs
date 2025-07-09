@@ -10,23 +10,20 @@ const MainLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // ✅ Ambil role dan token dari localStorage
   const token = localStorage.getItem('token');
   const role = localStorage.getItem('role');
 
-  // ✅ Validasi akses halaman sesuai role
   useEffect(() => {
-    const validRoles = ['admin', 'siswa', 'guru'];
-    const pathRole = location.pathname.split('/')[1]; // ex: /guru/materi-tugas => "guru"
+    const validRoles = ['admin', 'siswa', 'guru', 'orang-tua'];
+    const pathRole = location.pathname.split('/')[1]; // ambil "admin", "guru", dsb
 
-    // Kalau role ga cocok dengan path atau token kosong
+    // ✅ Validasi token dan role HARUS cocok dengan path
     if (!token || !validRoles.includes(role) || role !== pathRole) {
       localStorage.clear();
       navigate('/login');
     }
   }, [location.pathname, navigate, role, token]);
 
-  // ✅ Fetch profil pengguna sesuai role
   useEffect(() => {
     const fetchProfile = async () => {
       if (!token || !role) return;

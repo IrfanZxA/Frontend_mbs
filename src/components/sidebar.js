@@ -179,6 +179,22 @@ const Sidebar = ({ isOpen }) => {
             </>
           )}
 
+          {/* === ORANG TUA === */}
+{roleFromPath === 'orang-tua' && (
+  <>
+    <li className="sidebar-item" onClick={() => navigate('/orang-tua/dashboard')}>Home</li>
+    <li className="sidebar-item" onClick={toggleDropdown}>Akademik</li>
+    {isDropdownOpen && (
+      <ul style={{ listStyle: 'none', paddingLeft: '20px' }}>
+        <li className="sidebar-subitem" onClick={() => navigate('/orang-tua/kelas')}>Kelas</li>
+      </ul>
+    )}
+    <li className="sidebar-item" onClick={() => navigate('/orang-tua/penilaian')}>Penilaian</li>
+    <li className="sidebar-item" onClick={() => navigate('/orang-tua/presensi')}>Presensi</li>
+    <li className="sidebar-item" onClick={() => navigate('/orang-tua/pengaturan')}>Pengaturan</li>
+  </>
+)}
+
         </ul>
       </div>
     </>

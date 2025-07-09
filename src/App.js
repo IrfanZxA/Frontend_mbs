@@ -46,6 +46,13 @@ import TambahDataGuru from './components/admin/tambahdataguru';
 import EditJadwalGuru from './components/admin/editjadwalguru';
 import HapusGuruKeluar from './components/admin/hapusgurukeluar';
 
+// Layout orang tua
+import DashboardOrangtua from './components/orang_tua/dashboard';
+import DashboardKelasOrtu from './components/orang_tua/dashboard-kelas';
+import PenilaianOrtu from './components/orang_tua/Penilaian';
+import PresensiOrtu from './components/orang_tua/presensi';
+import RekapNilaiOrtu from './components/orang_tua/RekapNilaiSiswa';
+
 function App() {
   return (
     <BrowserRouter>
@@ -101,6 +108,15 @@ function App() {
         <Route index element={<Navigate to="akademik" />} />
       </Route>
 
+{/* === Orang Tua === */}
+<Route path="/orang-tua" element={<MainLayout />}>
+  <Route path="dashboard" element={<DashboardOrangtua />} />
+  <Route path="kelas" element={<DashboardKelasOrtu />} />
+  <Route path="penilaian" element={<PenilaianOrtu />} />
+  <Route path="penilaian/:mapelId" element={<RekapNilaiOrtu />} />
+  <Route path="presensi" element={<PresensiOrtu />} />
+  <Route index element={<Navigate to="dashboard" />} />
+</Route>
 
 
         {/* Default redirect to login */}
