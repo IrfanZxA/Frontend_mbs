@@ -45,6 +45,9 @@ import AdminPengaturan from './components/admin/admin-pengaturan';
 import TambahDataGuru from './components/admin/tambahdataguru';
 import EditJadwalGuru from './components/admin/editjadwalguru';
 import HapusGuruKeluar from './components/admin/hapusgurukeluar';
+import ProfilAdmin from './components/admin/ProfilAdmin';
+
+
 
 // Layout orang tua
 import DashboardOrangtua from './components/orang_tua/dashboard';
@@ -76,6 +79,7 @@ function App() {
           <Route path="admin-penilaian" element={<AdminPenilaian />} />
           <Route path="admin-presensi" element={<AdminPresensi />} />
           <Route path="admin-pengaturan" element={<AdminPengaturan />} />
+          <Route path="/admin/profil" element={<ProfilAdmin />} />
         </Route>
 
         {/* === Siswa Layout === */}

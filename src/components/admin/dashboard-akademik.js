@@ -1,72 +1,178 @@
-import React from 'react';
-import { useEffect, useState } from 'react';
-
+import React, { useEffect, useState } from 'react';
+import {
+  PieChart, Pie, Cell, Tooltip,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend,
+  ResponsiveContainer
+} from 'recharts';
 
 const DashboardAkademik = ({ isSidebarOpen }) => {
-const [profil, setProfil] = useState(null);
+  const [profil, setProfil] = useState(null);
+  const [dataSiswa, setDataSiswa] = useState([]);
+  const [dataGuru, setDataGuru] = useState([]);
+  const [dataNilai, setDataNilai] = useState([]);
 
-useEffect(() => {
-  const fetchProfile = async () => {
-    const token = localStorage.getItem('token');
-    const role = localStorage.getItem('role');
+  const token = localStorage.getItem('token');
 
-    try {
-      const response = await fetch(`http://localhost:5000/${role}/profile`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const token = localStorage.getItem('token');
+      const role = localStorage.getItem('role');
 
-      const data = await response.json();
-      setProfil(data);
-    } catch (error) {
-      console.error('Gagal mengambil profil admin:', error);
-    }
-  };
+      try {
+        const response = await fetch(`http://localhost:5000/${role}/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await response.json();
+        setProfil(data);
+      } catch (error) {
+        console.error('Gagal mengambil profil admin:', error);
+      }
+    };
 
-  fetchProfile();
-}, []);
+    fetchProfile();
+  }, []);
+
+  useEffect(() => {
+    const fetchDataNilai = async () => {
+      try {
+        const res = await fetch(`http://localhost:5000/nilai/laporan-mapel?kelas=7A&mapel=Matematika&semester=1`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const result = await res.json();
+
+        const formatted = result.map(item => ({
+          nama: item.nama_siswa || item.nama_lengkap,
+          rata_rata: item.rata_rata ?? 0,
+        }));
+
+        setDataNilai(formatted);
+      } catch (err) {
+        console.error("Gagal ambil data nilai", err);
+      }
+    };
+
+    const fetchDataSiswa = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/absensi/statistik-siswa");
+        const result = await res.json();
+
+        const total = {
+          hadir: Number(result.hadir || 0),
+          izin: Number(result.izin || 0),
+          tidakHadir: Number(result.tidak_hadir || 0),
+        };
+
+        const formatted = [
+          { name: "Hadir", value: total.hadir },
+          { name: "Izin", value: total.izin },
+          { name: "Tidak Hadir", value: total.tidakHadir },
+        ];
+        setDataSiswa(formatted);
+      } catch (err) {
+        console.error("Gagal ambil statistik absen siswa", err);
+      }
+    };
+
+    const fetchDataGuru = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/absensi/statistik-guru");
+        const result = await res.json();
+        const formatted = [
+          { name: "Hadir", jumlah: result.hadir || 0 },
+          { name: "Izin", jumlah: result.izin || 0 },
+          { name: "Tidak Hadir", jumlah: result.tidak_hadir || 0 },
+        ];
+        setDataGuru(formatted);
+      } catch (err) {
+        console.error("Gagal ambil statistik guru", err);
+      }
+    };
+
+    fetchDataNilai();
+    fetchDataSiswa();
+    fetchDataGuru();
+  }, [token]);
 
   return (
     <div
       style={{
         ...styles.container,
-        marginLeft: isSidebarOpen ? '250px' : '10px', // Dinamis sesuai sidebar
+        marginLeft: isSidebarOpen ? '250px' : '10px',
         transition: 'margin-left 0.3s ease',
       }}
     >
-      
       <h2 style={styles.header}>Dashboard Akademik</h2>
 
       <div style={styles.boxContainer}>
         {/* Box 1 - Rekap Nilai Siswa */}
         <div style={styles.box}>
           <h3 style={styles.title}>Rekap Nilai Siswa</h3>
-          <div style={styles.placeholder}>
-            <div style={{ ...styles.bar, width: '40%' }} />
-            <div style={{ ...styles.bar, width: '90%' }} />
-            <div style={{ ...styles.bar, width: '60%' }} />
-            <div style={{ ...styles.bar, width: '85%' }} />
-          </div>
+          {Array.isArray(dataNilai) && dataNilai.length > 0 ? (
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={dataNilai}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="nama" />
+                <YAxis domain={[0, 100]} />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="rata_rata" fill="#4caf50" name="Rata-rata" />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <p style={{ textAlign: 'center', marginTop: 40 }}>Tidak ada data nilai</p>
+          )}
         </div>
 
         {/* Box 2 - Statistik Absen Siswa */}
         <div style={styles.box}>
           <h3 style={styles.title}>Statistik Absen Siswa</h3>
-          <div style={styles.pieChart} />
+          {Array.isArray(dataSiswa) && dataSiswa.length > 0 ? (
+            <PieChart width={300} height={250}>
+              <Pie
+                data={dataSiswa}
+                cx="50%"
+                cy="50%"
+                outerRadius={80}
+                label
+                dataKey="value"
+              >
+                {dataSiswa.map((entry, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={
+                      entry.name === "Hadir"
+                        ? "#4caf50"
+                        : entry.name === "Izin"
+                        ? "#ffc107"
+                        : "#f44336"
+                    }
+                  />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          ) : (
+            <p style={{ textAlign: 'center', marginTop: 40 }}>Tidak ada data absen siswa</p>
+          )}
         </div>
 
-        {/* Box 3 - Kinerja Guru */}
+        {/* Box 3 - Statistik Absensi Guru */}
         <div style={styles.box}>
-          <h3 style={styles.title}>Kinerja Guru</h3>
-          <div style={styles.chartContainer}>
-            {[30, 40, 55, 50, 75, 60, 35].map((height, index) => (
-              <div
-                key={index}
-                style={{ ...styles.chartBar, height: `${height}px` }}
-              />
-            ))}
-          </div>
+          <h3 style={styles.title}>Statistik Absensi Guru</h3>
+          {Array.isArray(dataGuru) && dataGuru.length > 0 ? (
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={dataGuru}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="jumlah" fill="#1976d2" />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <p style={{ textAlign: 'center', marginTop: 40 }}>Tidak ada data absen guru</p>
+          )}
         </div>
       </div>
 
@@ -101,7 +207,6 @@ const styles = {
   container: {
     padding: '20px',
     fontFamily: 'Arial, sans-serif',
-    // marginLeft akan ditimpa oleh prop
   },
   header: {
     color: '#6B7280',
@@ -121,47 +226,13 @@ const styles = {
     borderRadius: '6px',
     boxShadow: '2px 2px 6px rgba(0,0,0,0.1)',
     padding: '16px',
-    minWidth: '220px',
+    minWidth: '300px',
   },
   title: {
     fontSize: '16px',
     marginBottom: '10px',
     textAlign: 'center',
   },
-  placeholder: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '10px',
-    marginTop: '20px',
-  },
-  bar: {
-    height: '20px',
-    backgroundColor: '#B0BEC5',
-    borderRadius: '4px',
-  },
-  pieChart: {
-    width: '100px',
-    height: '100px',
-    backgroundColor: '#B0BEC5',
-    borderRadius: '50%',
-    margin: '0 auto',
-    marginTop: '20px',
-  },
-  chartContainer: {
-    display: 'flex',
-    alignItems: 'flex-end',
-    gap: '5px',
-    justifyContent: 'center',
-    marginTop: '20px',
-    height: '100px',
-  },
-  chartBar: {
-    width: '15px',
-    backgroundColor: '#B0BEC5',
-    borderRadius: '3px',
-  },
-
-  // Notifikasi Styles
   notificationContainer: {
     backgroundColor: '#ECEFF1',
     padding: '16px',

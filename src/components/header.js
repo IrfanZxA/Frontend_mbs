@@ -1,7 +1,9 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom'; // Tambahkan ini
+
 
 const Header = ({ toggleSidebar, profil }) => {
-  // Fungsi untuk ambil nama_lengkap sesuai struktur data
+  const navigate = useNavigate();
   const getNamaLengkap = (profil) => {
     if (!profil) return 'Profil';
     if (profil.nama_lengkap) return profil.nama_lengkap;
@@ -51,7 +53,10 @@ const Header = ({ toggleSidebar, profil }) => {
       </div>
 
       {/* Kanan: Profil */}
-      <div className="d-flex align-items-center">
+      <div className="d-flex align-items-center"
+               style={{ cursor: 'pointer' }}
+         onClick={() => navigate('/admin/profil')}
+         >
         <img
           src="/images/logo-profile.png"
           alt="Profil"
