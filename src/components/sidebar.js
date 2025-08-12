@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { FiLogOut } from 'react-icons/fi';
 
 const Sidebar = ({ isOpen }) => {
   const navigate = useNavigate();
@@ -46,6 +47,12 @@ const Sidebar = ({ isOpen }) => {
     setIsJadwalDropdownOpen(prev => !prev);
   };
 
+  // Fungsi logout
+  const handleLogout = () => {
+    localStorage.clear();
+    window.location.href = "/login";
+  };
+
   const sidebarStyle = {
     width: '250px',
     height: '100vh',
@@ -61,6 +68,9 @@ const Sidebar = ({ isOpen }) => {
     left: 0,
     zIndex: 1000,
     paddingTop: '60px',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
   };
 
   return (
@@ -90,11 +100,31 @@ const Sidebar = ({ isOpen }) => {
         .sidebar-subitem:hover {
           background-color: #eee;
         }
+
+        /* Style khusus untuk tombol logout */
+        .sidebar-logout {
+          padding: 8px;
+          border-radius: 4px;
+          cursor: pointer;
+          color: #b22222;
+          font-weight: 600;
+          margin-top: 20px;
+          user-select: none;
+          text-align: left;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .sidebar-logout:hover {
+          background-color: #b22222;
+          color: white;
+        }
       `}</style>
 
       <div style={sidebarStyle}>
-        <ul className="list-unstyled">
-
+        <ul className="list-unstyled" style={{padding: 0, margin: 0}}>
           {/* === ADMIN SIDEBAR === */}
           {roleFromPath === 'admin' && (
             <>
@@ -115,7 +145,6 @@ const Sidebar = ({ isOpen }) => {
                   {isGuruDropdownOpen && (
                     <ul style={{ listStyle: 'none', paddingLeft: '20px' }}>
                       <li className="sidebar-subitem" onClick={() => navigate('/admin/ManajemenAkademik/ManajemenGuru/TambahDataGuru')}>Tambah Data Guru</li>
-                      <li className="sidebar-subitem" onClick={() => navigate('/admin/ManajemenAkademik/ManajemenGuru/EditJadwalGuru')}>Edit Jadwal Guru</li>
                     </ul>
                   )}
                 </ul>
@@ -172,25 +201,36 @@ const Sidebar = ({ isOpen }) => {
                   <li className="sidebar-subitem" onClick={() => navigate('/guru/jadwal/jadwalujian')}>Jadwal Ujian</li>
                 </ul>
               )}
-              <li className="sidebar-item" onClick={() => navigate('/guru/pengaturan')}>Pengaturan</li>
+              
             </>
           )}
 
           {/* === ORANG TUA === */}
-{roleFromPath === 'orang-tua' && (
-  <>
-    <li className="sidebar-item" onClick={() => navigate('/orang-tua/dashboard')}>Home</li>
-    <li className="sidebar-item" onClick={toggleDropdown}>Akademik</li>
-    {isDropdownOpen && (
-      <ul style={{ listStyle: 'none', paddingLeft: '20px' }}>
-        <li className="sidebar-subitem" onClick={() => navigate('/orang-tua/kelas')}>Kelas</li>
-      </ul>
-    )}
-    <li className="sidebar-item" onClick={() => navigate('/orang-tua/penilaian')}>Penilaian</li>
-    <li className="sidebar-item" onClick={() => navigate('/orang-tua/presensi')}>Presensi</li>
-  </>
-)}
+          {roleFromPath === 'orang-tua' && (
+            <>
+              <li className="sidebar-item" onClick={() => navigate('/orang-tua/dashboard')}>Home</li>
+              <li className="sidebar-item" onClick={toggleDropdown}>Akademik</li>
+              {isDropdownOpen && (
+                <ul style={{ listStyle: 'none', paddingLeft: '20px' }}>
+                  <li className="sidebar-subitem" onClick={() => navigate('/orang-tua/kelas')}>Kelas</li>
+                </ul>
+              )}
+              <li className="sidebar-item" onClick={() => navigate('/orang-tua/penilaian')}>Penilaian</li>
+              <li className="sidebar-item" onClick={() => navigate('/orang-tua/presensi')}>Presensi</li>
+            </>
+          )}
+        </ul>
 
+        {/* Tombol Logout selalu di bawah */}
+        <ul className="list-unstyled" style={{padding: 0, margin: 0}}>
+          <li
+            className="sidebar-logout"
+            onClick={handleLogout}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            <FiLogOut size={20} />
+            Logout
+          </li>
         </ul>
       </div>
     </>

@@ -38,7 +38,7 @@ const Dashboard = () => {
         });
 
         const data = await response.json();
-        setTugas(Array.isArray(data) ? data : data.data); // ⬅️ ambil .data jika perlu
+        setTugas(Array.isArray(data) ? data : data.data);
       } catch (error) {
         console.error('Gagal mengambil data tugas:', error);
       }
@@ -63,42 +63,52 @@ const Dashboard = () => {
     fetchJadwal();
   }, []);
 
+  // Fungsi format tanggal jadi "02 Juli 2025"
+  const formatTanggal = (tanggalString) => {
+    if (!tanggalString) return '-';
+    const date = new Date(tanggalString);
+    if (isNaN(date)) return tanggalString;
+
+    const options = { day: '2-digit', month: 'long', year: 'numeric' };
+    return date.toLocaleDateString('id-ID', options);
+  };
+
   const [currentDate, setCurrentDate] = useState(new Date());
-const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
-  'August', 'September', 'October', 'November', 'December'];
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
+    'August', 'September', 'October', 'November', 'December'];
 
-const renderCalendar = () => {
-  const year = currentDate.getFullYear();
-  const month = currentDate.getMonth();
-  const firstDayIndex = new Date(year, month, 1).getDay(); // 0 = Sunday
-  const lastDate = new Date(year, month + 1, 0).getDate();
+  const renderCalendar = () => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const firstDayIndex = new Date(year, month, 1).getDay(); // 0 = Sunday
+    const lastDate = new Date(year, month + 1, 0).getDate();
 
-  const calendar = [];
-  let day = 1 - ((firstDayIndex + 6) % 7); // Adjust so Monday is first
+    const calendar = [];
+    let day = 1 - ((firstDayIndex + 6) % 7); // Adjust so Monday is first
 
-  for (let i = 0; i < 6; i++) {
-    const row = [];
-    for (let j = 0; j < 7; j++) {
-      if (day > 0 && day <= lastDate) {
-        const isToday = new Date().getDate() === day &&
-          new Date().getMonth() === month &&
-          new Date().getFullYear() === year;
-        row.push(
-          <td key={j}>
-            <div style={isToday ? styles.dayActive : styles.day}>
-              {day.toString().padStart(2, '0')}
-            </div>
-          </td>
-        );
-      } else {
-        row.push(<td key={j}></td>);
+    for (let i = 0; i < 6; i++) {
+      const row = [];
+      for (let j = 0; j < 7; j++) {
+        if (day > 0 && day <= lastDate) {
+          const isToday = new Date().getDate() === day &&
+            new Date().getMonth() === month &&
+            new Date().getFullYear() === year;
+          row.push(
+            <td key={j}>
+              <div style={isToday ? styles.dayActive : styles.day}>
+                {day.toString().padStart(2, '0')}
+              </div>
+            </td>
+          );
+        } else {
+          row.push(<td key={j}></td>);
+        }
+        day++;
       }
-      day++;
+      calendar.push(<tr key={i}>{row}</tr>);
     }
-    calendar.push(<tr key={i}>{row}</tr>);
-  }
-  return calendar;
-};
+    return calendar;
+  };
 
   return (
     <div className="d-flex">
@@ -117,7 +127,7 @@ const renderCalendar = () => {
               <img src="/images/human-sitting.png" alt="Human Illustration" height="120" />
             </div>
           </div>
-         <div className="col-md-4">
+          <div className="col-md-4">
             <CardBox title="Kalender" icon="calendar3">
               <div style={styles.container}>
                 <div style={styles.header}>
@@ -154,7 +164,7 @@ const renderCalendar = () => {
                   tugas.map((item, index) => (
                     <li key={index}>
                       <i className="bi bi-journal-text me-2 text-primary"></i>
-                      {item.judul} - <span className="text-muted">{item.tanggal_deadline}</span>
+                      {item.judul} - <span className="text-muted">{formatTanggal(item.tanggal_deadline)}</span>
                     </li>
                   ))
                 )}
@@ -186,11 +196,11 @@ const renderCalendar = () => {
                 <ul className="ps-3">
                   <li>
                     <i className="bi bi-star-fill text-warning me-2"></i>
-                    Guru Sejarah: Silahkan baca bab 3
+                    Libur Semester Dimulai Akhir Bulan
                   </li>
                   <li>
                     <i className="bi bi-exclamation-circle-fill text-danger me-2"></i>
-                    Tugas Biologi: dikumpulkan besok!
+                    Remidial di tanggal 20 - 27
                   </li>
                 </ul>
               </div>
@@ -199,7 +209,7 @@ const renderCalendar = () => {
         </div>
       </div>
     </div>
-    
+
   );
 };
 

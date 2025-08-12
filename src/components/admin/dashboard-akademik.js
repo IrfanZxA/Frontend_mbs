@@ -5,17 +5,22 @@ import {
   ResponsiveContainer
 } from 'recharts';
 
+const kelasOptions = ['7A', '7B', '7C', '7D', '8A', '8B', '8C', '8D', '9A', '9B', '9C', '9D'];
+
 const DashboardAkademik = ({ isSidebarOpen }) => {
   const [profil, setProfil] = useState(null);
   const [dataSiswa, setDataSiswa] = useState([]);
   const [dataGuru, setDataGuru] = useState([]);
   const [dataNilai, setDataNilai] = useState([]);
 
+  // State kelas untuk filter nilai dan absen siswa
+  const [kelasNilai, setKelasNilai] = useState('7A');
+  const [kelasAbsen, setKelasAbsen] = useState('7A');
+
   const token = localStorage.getItem('token');
 
   useEffect(() => {
     const fetchProfile = async () => {
-      const token = localStorage.getItem('token');
       const role = localStorage.getItem('role');
 
       try {
@@ -30,30 +35,37 @@ const DashboardAkademik = ({ isSidebarOpen }) => {
     };
 
     fetchProfile();
-  }, []);
+  }, [token]);
 
   useEffect(() => {
     const fetchDataNilai = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/nilai/laporan-mapel?kelas=7A&mapel=Matematika&semester=1`, {
+        const res = await fetch(`http://localhost:5000/nilai/laporan-mapel?kelas=${kelasNilai}&mapel=Matematika&semester=1`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const result = await res.json();
 
+        if (!Array.isArray(result)) {
+          console.error("Data nilai bukan array:", result);
+          setDataNilai([]);
+          return;
+        }
+
         const formatted = result.map(item => ({
-          nama: item.nama_siswa || item.nama_lengkap,
+          nama: item.nama_lengkap || item.nama_siswa,
           rata_rata: item.rata_rata ?? 0,
         }));
 
         setDataNilai(formatted);
       } catch (err) {
         console.error("Gagal ambil data nilai", err);
+        setDataNilai([]);
       }
     };
 
     const fetchDataSiswa = async () => {
       try {
-        const res = await fetch("http://localhost:5000/absensi/statistik-siswa");
+        const res = await fetch(`http://localhost:5000/absensi/statistik-siswa?kelas=${kelasAbsen}`);
         const result = await res.json();
 
         const total = {
@@ -70,6 +82,7 @@ const DashboardAkademik = ({ isSidebarOpen }) => {
         setDataSiswa(formatted);
       } catch (err) {
         console.error("Gagal ambil statistik absen siswa", err);
+        setDataSiswa([]);
       }
     };
 
@@ -85,28 +98,53 @@ const DashboardAkademik = ({ isSidebarOpen }) => {
         setDataGuru(formatted);
       } catch (err) {
         console.error("Gagal ambil statistik guru", err);
+        setDataGuru([]);
       }
     };
 
     fetchDataNilai();
     fetchDataSiswa();
     fetchDataGuru();
-  }, [token]);
+  }, [kelasNilai, kelasAbsen, token]);
 
   return (
     <div
       style={{
-        ...styles.container,
+        padding: '20px',
+        fontFamily: 'Arial, sans-serif',
         marginLeft: isSidebarOpen ? '250px' : '10px',
         transition: 'margin-left 0.3s ease',
       }}
     >
-      <h2 style={styles.header}>Dashboard Akademik</h2>
+      <h2 style={{ color: '#6B7280', marginBottom: '20px', fontWeight: 'bold', fontSize: '18px' }}>
+        Dashboard Akademik
+      </h2>
 
-      <div style={styles.boxContainer}>
-        {/* Box 1 - Rekap Nilai Siswa */}
-        <div style={styles.box}>
-          <h3 style={styles.title}>Rekap Nilai Siswa</h3>
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: '20px', flexWrap: 'wrap' }}>
+        {/* Box Rekap Nilai Siswa */}
+        <div style={{
+          flex: '1 1 30%',
+          backgroundColor: '#F4F6F8',
+          borderRadius: '6px',
+          boxShadow: '2px 2px 6px rgba(0,0,0,0.1)',
+          padding: '16px',
+          minWidth: '300px',
+        }}>
+          <h3 style={{ fontSize: '16px', marginBottom: '10px', textAlign: 'center' }}>Rekap Nilai Siswa</h3>
+
+          {/* Dropdown kelas untuk rekap nilai */}
+          <div style={{ marginBottom: '10px', textAlign: 'center' }}>
+            <select
+              value={kelasNilai}
+              onChange={e => setKelasNilai(e.target.value)}
+              style={{ padding: '6px 12px', fontSize: '14px' }}
+            >
+              {kelasOptions.map(kelas => (
+                <option key={kelas} value={kelas}>{kelas}</option>
+              ))}
+            </select>
+          </div>
+
           {Array.isArray(dataNilai) && dataNilai.length > 0 ? (
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={dataNilai}>
@@ -123,11 +161,32 @@ const DashboardAkademik = ({ isSidebarOpen }) => {
           )}
         </div>
 
-        {/* Box 2 - Statistik Absen Siswa */}
-        <div style={styles.box}>
-          <h3 style={styles.title}>Statistik Absen Siswa</h3>
+        {/* Box Statistik Absen Siswa */}
+        <div style={{
+          flex: '1 1 30%',
+          backgroundColor: '#F4F6F8',
+          borderRadius: '6px',
+          boxShadow: '2px 2px 6px rgba(0,0,0,0.1)',
+          padding: '16px',
+          minWidth: '300px',
+        }}>
+          <h3 style={{ fontSize: '16px', marginBottom: '10px', textAlign: 'center' }}>Statistik Absen Siswa</h3>
+
+          {/* Dropdown kelas untuk absen siswa */}
+          <div style={{ marginBottom: '10px', textAlign: 'center' }}>
+            <select
+              value={kelasAbsen}
+              onChange={e => setKelasAbsen(e.target.value)}
+              style={{ padding: '6px 12px', fontSize: '14px' }}
+            >
+              {kelasOptions.map(kelas => (
+                <option key={kelas} value={kelas}>{kelas}</option>
+              ))}
+            </select>
+          </div>
+
           {Array.isArray(dataSiswa) && dataSiswa.length > 0 ? (
-            <PieChart width={300} height={250}>
+            <PieChart width={500} height={250}>
               <Pie
                 data={dataSiswa}
                 cx="50%"
@@ -156,9 +215,16 @@ const DashboardAkademik = ({ isSidebarOpen }) => {
           )}
         </div>
 
-        {/* Box 3 - Statistik Absensi Guru */}
-        <div style={styles.box}>
-          <h3 style={styles.title}>Statistik Absensi Guru</h3>
+        {/* Box Statistik Absensi Guru */}
+        <div style={{
+          flex: '1 1 30%',
+          backgroundColor: '#F4F6F8',
+          borderRadius: '6px',
+          boxShadow: '2px 2px 6px rgba(0,0,0,0.1)',
+          padding: '16px',
+          minWidth: '300px',
+        }}>
+          <h3 style={{ fontSize: '16px', marginBottom: '10px', textAlign: 'center' }}>Statistik Absensi Guru</h3>
           {Array.isArray(dataGuru) && dataGuru.length > 0 ? (
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={dataGuru}>
@@ -177,102 +243,56 @@ const DashboardAkademik = ({ isSidebarOpen }) => {
       </div>
 
       {/* Notifikasi Section */}
-      <div style={styles.notificationContainer}>
-        <div style={styles.notificationHeader}>
-          <img src="/images/logo-lonceng.png" alt="Notifikasi" style={styles.bellIcon} />
-          <span style={styles.notificationTitle}>Notifikasi</span>
+      <div style={{
+        backgroundColor: '#ECEFF1',
+        padding: '16px',
+        borderRadius: '8px',
+        marginTop: '30px',
+        boxShadow: '2px 2px 6px rgba(0, 0, 0, 0.1)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
+          <img src="/images/logo-lonceng.png" alt="Notifikasi" style={{ fontSize: '18px', marginRight: '8px' }} />
+          <span style={{ fontWeight: 'bold', color: '#37474F' }}>Notifikasi</span>
         </div>
 
-        <div style={styles.notificationCard}>
+        <div style={{
+          backgroundColor: 'white',
+          padding: '12px 16px',
+          borderRadius: '6px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+          marginBottom: '12px',
+          cursor: 'pointer',
+        }}>
           <div>
             <strong>Pengajuan Perubahan Data Akademik</strong>
-            <p style={styles.notificationSub}>Permintaan untuk memperbarui profil sekolah</p>
+            <p style={{ fontSize: '12px', color: '#78909C', margin: '4px 0 0 0' }}>Permintaan untuk memperbarui profil sekolah</p>
           </div>
-          <span style={styles.arrow}>&#8250;</span>
+          <span style={{ fontSize: '20px', color: '#455A64' }}>&#8250;</span>
         </div>
 
-        <div style={styles.notificationCard}>
+        <div style={{
+          backgroundColor: 'white',
+          padding: '12px 16px',
+          borderRadius: '6px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+          marginBottom: '12px',
+          cursor: 'pointer',
+        }}>
           <div>
             <strong>Laporan dari wali kelas / guru</strong>
-            <p style={styles.notificationSub}>Laporan absensi bulanan telah tersedia</p>
+            <p style={{ fontSize: '12px', color: '#78909C', margin: '4px 0 0 0' }}>Laporan absensi bulanan telah tersedia</p>
           </div>
-          <span style={styles.arrow}>&#8250;</span>
+          <span style={{ fontSize: '20px', color: '#455A64' }}>&#8250;</span>
         </div>
       </div>
     </div>
   );
-};
-
-const styles = {
-  container: {
-    padding: '20px',
-    fontFamily: 'Arial, sans-serif',
-  },
-  header: {
-    color: '#6B7280',
-    marginBottom: '20px',
-    fontWeight: 'bold',
-    fontSize: '18px',
-  },
-  boxContainer: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    gap: '20px',
-    flexWrap: 'wrap',
-  },
-  box: {
-    flex: '1 1 30%',
-    backgroundColor: '#F4F6F8',
-    borderRadius: '6px',
-    boxShadow: '2px 2px 6px rgba(0,0,0,0.1)',
-    padding: '16px',
-    minWidth: '300px',
-  },
-  title: {
-    fontSize: '16px',
-    marginBottom: '10px',
-    textAlign: 'center',
-  },
-  notificationContainer: {
-    backgroundColor: '#ECEFF1',
-    padding: '16px',
-    borderRadius: '8px',
-    marginTop: '30px',
-    boxShadow: '2px 2px 6px rgba(0, 0, 0, 0.1)',
-  },
-  notificationHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    marginBottom: '16px',
-  },
-  bellIcon: {
-    fontSize: '18px',
-    marginRight: '8px',
-  },
-  notificationTitle: {
-    fontWeight: 'bold',
-    color: '#37474F',
-  },
-  notificationCard: {
-    backgroundColor: 'white',
-    padding: '12px 16px',
-    borderRadius: '6px',
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-    marginBottom: '12px',
-    cursor: 'pointer',
-  },
-  notificationSub: {
-    fontSize: '12px',
-    color: '#78909C',
-    margin: '4px 0 0 0',
-  },
-  arrow: {
-    fontSize: '20px',
-    color: '#455A64',
-  },
 };
 
 export default DashboardAkademik;
