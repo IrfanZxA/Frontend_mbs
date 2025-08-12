@@ -1,42 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import InformasiProfil from './profil/InformasiProfil';
-import GantiPassword from './profil/GantiPassword';
-import axios from 'axios';
+// src/pages/admin/ProfilAdmin.js
+import React from "react";
+import InformasiProfil from "../../shared/profil/InformasiProfil";
+import GantiPassword from "../../shared/profil/GantiPassword";
 
-const ProfilAdmin = () => {
-  const [profil, setProfil] = useState(null);
-
-  useEffect(() => {
-    const fetchProfil = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const res = await axios.get('/admin/profil', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setProfil(res.data);
-      } catch (err) {
-        console.error('Gagal ambil profil', err);
-      }
-    };
-
-    fetchProfil();
-  }, []);
-
+export default function ProfilAdmin() {
   return (
-    <div className="container mt-4">
-      <h4>Profil</h4>
-      {profil && (
-        <div className="row mt-3">
-          <div className="col-md-6">
-            <InformasiProfil profil={profil} />
-          </div>
-          <div className="col-md-6">
-            <GantiPassword />
-          </div>
-        </div>
-      )}
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="max-w-4xl mx-auto space-y-6">
+        <InformasiProfil role="admin" />
+        <GantiPassword role="admin" />
+      </div>
     </div>
   );
-};
-
-export default ProfilAdmin;
+}
